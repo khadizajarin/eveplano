@@ -65,6 +65,7 @@ const NAV12 = 'rgba(4,30,75,0.08)';
 
 const styles = StyleSheet.create({
   card: {
+    fontFamily: 'BJCree-Regular',
     backgroundColor: CREAM,
     borderRadius: 20,
     marginBottom: 20,
@@ -104,14 +105,16 @@ const styles = StyleSheet.create({
     borderColor: CREAM,
   },
   badgeText: {
+    fontFamily: 'BJCree-Regular',
     color: CREAM,
     fontSize: 9,
-    fontWeight: '700',
+    // fontWeight: '700',
     letterSpacing: 2.8,
   },
 
   /* ── Content ── */
   content: {
+    fontFamily: 'BJCree-Regular',
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 22,
@@ -125,14 +128,16 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   title: {
+    fontFamily: 'BJCree-Bold',
     fontSize: 22,
-    fontWeight: '800',
+    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.5,
     marginBottom: 8,
     lineHeight: 28,
   },
   desc: {
+    fontFamily: 'BJCree-Regular',
     fontSize: 14,
     color: 'rgba(4,30,75,0.58)',
     lineHeight: 22,
@@ -179,9 +184,10 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonText: {
+    fontFamily: 'BJCree-SemiBold',
     color: CREAM,
     fontSize: 13,
-    fontWeight: '700',
+    // fontWeight: '700',
     letterSpacing: 0.8,
   },
   buttonArrow: {

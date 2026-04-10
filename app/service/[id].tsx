@@ -39,11 +39,11 @@ const ServiceDetails = () => {
   return (
     <View style={{ padding: 20 }}>
       <Image source={{ uri: data.image }} style={{ height: 200 }} />
-      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>
-        {data.name}
+      <Text style={{fontFamily: 'BJCree-Bold', fontSize: 24 }}>
+        {data.name} 
       </Text>
-      <Text>{data.description}</Text>
-      <Text>{data.price}</Text>
+      <Text style={{fontFamily: 'BJCree-Regular'}}>{data.description}</Text>
+      <Text style={{fontFamily: 'BJCree-Regular'}}>{data.price}</Text>
     </View>
   );
 };

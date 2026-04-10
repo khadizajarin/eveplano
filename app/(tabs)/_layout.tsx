@@ -1,17 +1,36 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-
+import React, { useEffect } from 'react';
 import { HapticTab } from '@/components/haptic-tab';
-// import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';  
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync();
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
+   const [loaded, error] = useFonts({
+    'BJCree-Regular': require('../../assets/fonts/BJCree-Regular.ttf'),
+    'BJCree-Medium': require('../../assets/fonts/BJCree-Medium.ttf'),
+    'BJCree-Bold': require('../../assets/fonts/BJCree-Bold.ttf'),
+    'BJCree-SemiBold': require('../../assets/fonts/BJCree-SemiBold.ttf'),
+  });
+
+ useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
+
+  if (!loaded && !error) {
+    return null;
+  }
+
   return (
-    <Tabs
+    <Tabs 
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
@@ -36,6 +55,14 @@ export default function TabLayout() {
         options={{
           title: 'Services',
           tabBarIcon: ({ color }) => <Ionicons size={24} name="bag" color={color} />,
+        }}
+      />
+
+       <Tabs.Screen
+        name="reviews"
+        options={{
+          title: 'Reviews',
+          tabBarIcon: ({ color }) => <Ionicons size={24} name="star" color={color} />,
         }}
       />
     </Tabs>
