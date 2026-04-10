@@ -9,7 +9,7 @@ import {
   TextInput,
   ToastAndroid,
 } from 'react-native';
-// import AddReview from './AddReview';
+
 import app, { db } from '../hooks/firebase.config';
 import {
   collection,
@@ -17,6 +17,7 @@ import {
   doc,
   getDocs,
   getDoc,
+  onSnapshot,
 } from 'firebase/firestore';
 
 import { MaterialCommunityIcons, Fontisto } from '@expo/vector-icons';
@@ -46,30 +47,23 @@ const Reviews = () => {
   const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
   const { user } = useAuthentication(app);
 
-  // console.log('Authenticated user:', user);
-
-  const fetchReviews = async () => {
-    try {
-      const snap = await getDocs(collection(db, 'reviews'));
-
-      const data: ReviewType[] = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<ReviewType, 'id'>),
-        likedEmail: doc.data().likedEmail || [],
-        comments: doc.data().comments || [],
-      }));
-
-      setReviews(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  console.log('Authenticated user:', user.email);
 
   useEffect(() => {
-    fetchReviews();
-  }, []);
+  const unsub = onSnapshot(collection(db, 'reviews'), (snap) => {
+    const data = snap.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      likedEmail: doc.data().likedEmail || [],
+      comments: doc.data().comments || [],
+    }));
+
+    setReviews(data);
+    setLoading(false);
+  });
+
+  return () => unsub(); 
+}, []);
 
   const toggleComments = (index: number) => {
     setShowComments((prev) => ({
@@ -88,12 +82,12 @@ const Reviews = () => {
         const likedEmail = data.likedEmail || [];
 
         if (!likedEmail.includes(user.email)) {
-          // await updateDoc(ref, {
-          //   likedEmail: [...likedEmail, user.email],
-          // });
+          await updateDoc(ref, {
+            likedEmail: [...likedEmail, user.email],
+          });
 
           ToastAndroid.show('Liked!', ToastAndroid.SHORT);
-          fetchReviews();
+          // fetchReviews();
         } else {
           ToastAndroid.show('Already liked', ToastAndroid.SHORT);
         }
@@ -112,7 +106,7 @@ const Reviews = () => {
 
       const newComments = [
         ...(review.comments || []),
-        // { email: user.email, commentText: text },
+        { email: user.email, commentText: text },
       ];
 
       await updateDoc(ref, { comments: newComments });
@@ -120,7 +114,7 @@ const Reviews = () => {
       ToastAndroid.show('Comment posted', ToastAndroid.SHORT);
 
       setCommentTexts((prev) => ({ ...prev, [index]: '' }));
-      fetchReviews();
+      // fetchReviews();
     } catch (error) {
       console.error(error);
     }
@@ -185,24 +179,24 @@ const Reviews = () => {
                 <TouchableOpacity
                   style={[
                     styles.actionBtn,
-                    // review.likedEmail?.includes(user.email) && styles.actionBtnActive,
+                    review.likedEmail?.includes(user.email) && styles.actionBtnActive,
                   ]}
                   onPress={() => handleLike(review)}
                 >
                   <MaterialCommunityIcons
                     name={
-                      review.likedEmail//?.includes(user.email)
+                      review.likedEmail?.includes(user.email)
                         ? 'cards-heart'
                         : 'cards-heart-outline'
                     }
                     size={17}
-                     color={review.likedEmail//?.includes(user.email)
+                     color={review.likedEmail?.includes(user.email)
                        ? CREAM : NAV}
                   />
                   <Text
                     style={[
                       styles.actionText,
-                      review.likedEmail//?.includes(user.email)
+                      review.likedEmail?.includes(user.email)
                        && styles.actionTextActive,
                     ]}
                   >
