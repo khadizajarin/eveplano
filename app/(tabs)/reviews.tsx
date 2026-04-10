@@ -34,6 +34,9 @@ type ReviewType = {
   comments: CommentType[];
 };
 
+const NAV   = '#041e4b';
+const CREAM = '#fffefd';
+
 const Reviews = () => {
   const [reviews, setReviews] = useState<ReviewType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,12 +101,8 @@ const Reviews = () => {
     }
   };
 
-  const handlePostComment = async (
-    review: ReviewType,
-    index: number
-  ) => {
+  const handlePostComment = async (review: ReviewType, index: number) => {
     const text = commentTexts[index];
-
     if (!text) return;
 
     try {
@@ -111,127 +110,161 @@ const Reviews = () => {
 
       const newComments = [
         ...(review.comments || []),
-        {
-          email: user.email,
-          commentText: text,
-        },
+        { email: user.email, commentText: text },
       ];
 
-      await updateDoc(ref, {
-        comments: newComments,
-      });
+      await updateDoc(ref, { comments: newComments });
 
       ToastAndroid.show('Comment posted', ToastAndroid.SHORT);
 
-      setCommentTexts((prev) => ({
-        ...prev,
-        [index]: '',
-      }));
-
+      setCommentTexts((prev) => ({ ...prev, [index]: '' }));
       fetchReviews();
     } catch (error) {
       console.error(error);
     }
   };
 
-  if (loading) return <ActivityIndicator size="large" />;
+  if (loading)
+    return (
+      <View style={styles.loaderScreen}>
+        <ActivityIndicator size="large" color={NAV} />
+        <Text style={styles.loaderLabel}>Loading reviews…</Text>
+      </View>
+    );
 
   return (
-    <ScrollView>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.container}>
 
-        <Text style={styles.header}>
-          See What Our Clients Say!
-        </Text>
+        {/* ── Header ── */}
+        <View style={styles.header}>
+          <View style={styles.headerAccent} />
+          <View>
+            <Text style={styles.eyebrow}>CLIENT FEEDBACK</Text>
+            <Text style={styles.headerTitle}>See What Our Clients Say!</Text>
+          </View>
+        </View>
 
+        <View style={styles.divider} />
+
+        {/* ── Review Cards ── */}
         {reviews.map((review, index) => (
-          <View key={review.id}>
+          <View key={review.id} style={styles.reviewWrapper}>
 
-            {/* REVIEW */}
+            {/* REVIEW CARD */}
             <View style={styles.card}>
-              <Text style={styles.review}>
-                "{review.reviewtext}"
+
+              {/* Quote mark */}
+              <Text style={styles.quoteMark}>&quot;</Text>
+
+              <Text style={styles.reviewText}>
+                {review.reviewtext}
               </Text>
 
-              <Text style={styles.email}>
-                — {review.email}
-              </Text>
+              {/* Accent line + email */}
+              <View style={styles.authorRow}>
+                <View style={styles.authorLine} />
+                <Text style={styles.emailText}>{review.email}</Text>
+              </View>
 
               {/* ACTIONS */}
-              <View style={styles.row}>
-
+              <View style={styles.actionsRow}>
                 {/* LIKE */}
                 <TouchableOpacity
-                  style={styles.button}
+                  style={[
+                    styles.actionBtn,
+                    review.likedEmail?.includes(user.email) && styles.actionBtnActive,
+                  ]}
                   onPress={() => handleLike(review)}
                 >
-                  <Text style={styles.btnText}>
-                    {review.likedEmail?.length || 0}{' '}
-                    <MaterialCommunityIcons
-                      name={
-                        review.likedEmail?.includes(user.email)
-                          ? 'cards-heart'
-                          : 'cards-heart-outline'
-                      }
-                      size={18}
-                      color="#AB8C56"
-                    />
+                  <MaterialCommunityIcons
+                    name={
+                      review.likedEmail?.includes(user.email)
+                        ? 'cards-heart'
+                        : 'cards-heart-outline'
+                    }
+                    size={17}
+                    color={review.likedEmail?.includes(user.email) ? CREAM : NAV}
+                  />
+                  <Text
+                    style={[
+                      styles.actionText,
+                      review.likedEmail?.includes(user.email) && styles.actionTextActive,
+                    ]}
+                  >
+                    {review.likedEmail?.length || 0}
                   </Text>
                 </TouchableOpacity>
 
-                {/* COMMENTS COUNT */}
+                {/* COMMENTS TOGGLE */}
                 <TouchableOpacity
-                  style={styles.button}
+                  style={[
+                    styles.actionBtn,
+                    showComments[index] && styles.actionBtnActive,
+                  ]}
                   onPress={() => toggleComments(index)}
                 >
-                  <Text style={styles.btnText}>
-                    {review.comments?.length || 0}{' '}
-                    <Fontisto name="comments" size={16} color="#AB8C56" />
+                  <Fontisto
+                    name="comments"
+                    size={15}
+                    color={showComments[index] ? CREAM : NAV}
+                  />
+                  <Text
+                    style={[
+                      styles.actionText,
+                      showComments[index] && styles.actionTextActive,
+                    ]}
+                  >
+                    {review.comments?.length || 0}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* COMMENTS */}
+            {/* ── COMMENTS SECTION ── */}
             {showComments[index] && (
-              <View style={{ marginLeft: 10 }}>
+              <View style={styles.commentsSection}>
 
-                {review.comments?.map((c, i) => (
-                  <View key={i} style={styles.commentBox}>
-                    <Text>{c.commentText}</Text>
-                    <Text style={styles.commentEmail}>
-                      — {c.email}
-                    </Text>
+                {/* Thread line */}
+                <View style={styles.threadLine} />
+
+                <View style={styles.commentsInner}>
+                  {review.comments?.map((c, i) => (
+                    <View key={i} style={styles.commentBubble}>
+                      <Text style={styles.commentText}>{c.commentText}</Text>
+                      <Text style={styles.commentEmail}>— {c.email}</Text>
+                    </View>
+                  ))}
+
+                  {/* ADD COMMENT */}
+                  <View style={styles.inputRow}>
+                    <TextInput
+                      placeholder="Write a comment…"
+                      placeholderTextColor="rgba(4,30,75,0.35)"
+                      value={commentTexts[index] || ''}
+                      onChangeText={(t) =>
+                        setCommentTexts((prev) => ({ ...prev, [index]: t }))
+                      }
+                      style={styles.input}
+                    />
+                    <TouchableOpacity
+                      style={styles.postBtn}
+                      activeOpacity={0.82}
+                      onPress={() => handlePostComment(review, index)}
+                    >
+                      <Text style={styles.postBtnText}>Post</Text>
+                    </TouchableOpacity>
                   </View>
-                ))}
-
-                {/* ADD COMMENT */}
-                <View style={styles.commentInputRow}>
-                  <TextInput
-                    placeholder="Write comment..."
-                    value={commentTexts[index] || ''}
-                    onChangeText={(t) =>
-                      setCommentTexts((prev) => ({
-                        ...prev,
-                        [index]: t,
-                      }))
-                    }
-                    style={styles.input}
-                  />
-
-                  <TouchableOpacity
-                    style={styles.postBtn}
-                    onPress={() =>
-                      handlePostComment(review, index)
-                    }
-                  >
-                    <Text style={styles.btnText}>Post</Text>
-                  </TouchableOpacity>
                 </View>
               </View>
             )}
           </View>
         ))}
+
       </View>
     </ScrollView>
   );
@@ -240,79 +273,217 @@ const Reviews = () => {
 export default Reviews;
 
 const styles = StyleSheet.create({
+  /* ── Screen ── */
+  scroll: {
+    flex: 1,
+    backgroundColor: CREAM,
+  },
+  scrollContent: {
+    paddingBottom: 48,
+  },
   container: {
-    padding: 20,
-    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingTop: 56,
+  },
+  loaderScreen: {
+    flex: 1,
+    backgroundColor: CREAM,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  loaderLabel: {
+    fontSize: 13,
+    color: 'rgba(4,30,75,0.50)',
+    fontWeight: '500',
+    letterSpacing: 0.3,
   },
 
+  /* ── Header ── */
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 18,
+  },
+  headerAccent: {
+    width: 4,
+    height: 62,
+    backgroundColor: NAV,
+    borderRadius: 2,
+  },
+  eyebrow: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(4,30,75,0.45)',
+    letterSpacing: 3,
+    marginBottom: 5,
+  },
+  headerTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    fontWeight: '800',
+    color: NAV,
+    letterSpacing: -0.6,
+    lineHeight: 34,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(4,30,75,0.10)',
+    marginBottom: 24,
   },
 
+  /* ── Review Card ── */
+  reviewWrapper: {
+    marginBottom: 16,
+  },
   card: {
-    backgroundColor: 'rgba(201,170,116,0.3)',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 10,
+    backgroundColor: CREAM,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(4,30,75,0.10)',
+    shadowColor: NAV,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.10,
+    shadowRadius: 18,
+    elevation: 6,
   },
-
-  review: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  quoteMark: {
+    fontSize: 52,
+    lineHeight: 44,
+    color: 'rgba(4,30,75,0.08)',
+    fontWeight: '900',
+    marginBottom: 4,
   },
-
-  email: {
-    marginTop: 5,
-    fontStyle: 'italic',
+  reviewText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: NAV,
+    lineHeight: 24,
+    letterSpacing: 0.1,
+    marginBottom: 14,
   },
-
-  row: {
+  authorRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 18,
   },
-
-  button: {
-    backgroundColor: '#3A3D42',
-    padding: 10,
-    borderRadius: 5,
+  authorLine: {
+    width: 24,
+    height: 2,
+    backgroundColor: NAV,
+    borderRadius: 1,
   },
-
-  btnText: {
-    color: '#AB8C56',
-    fontWeight: 'bold',
-  },
-
-  commentBox: {
-    marginTop: 8,
-    padding: 8,
-    backgroundColor: '#f1f2f6',
-    borderRadius: 6,
-  },
-
-  commentEmail: {
+  emailText: {
     fontSize: 12,
-    color: '#777',
+    color: 'rgba(4,30,75,0.55)',
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 
-  commentInputRow: {
+  /* ── Action Buttons ── */
+  actionsRow: {
     flexDirection: 'row',
-    marginTop: 10,
-    gap: 5,
+    gap: 10,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 50,
+    borderWidth: 1.5,
+    borderColor: 'rgba(4,30,75,0.20)',
+    backgroundColor: 'transparent',
+  },
+  actionBtnActive: {
+    backgroundColor: NAV,
+    borderColor: NAV,
+  },
+  actionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: NAV,
+    letterSpacing: 0.2,
+  },
+  actionTextActive: {
+    color: CREAM,
   },
 
+  /* ── Comments Section ── */
+  commentsSection: {
+    flexDirection: 'row',
+    marginTop: 4,
+    paddingLeft: 10,
+  },
+  threadLine: {
+    width: 2,
+    backgroundColor: 'rgba(4,30,75,0.12)',
+    borderRadius: 1,
+    marginRight: 14,
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  commentsInner: {
+    flex: 1,
+    gap: 8,
+  },
+  commentBubble: {
+    backgroundColor: 'rgba(4,30,75,0.05)',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(4,30,75,0.08)',
+  },
+  commentText: {
+    fontSize: 14,
+    color: NAV,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  commentEmail: {
+    fontSize: 11,
+    color: 'rgba(4,30,75,0.45)',
+    fontWeight: '600',
+    marginTop: 5,
+    letterSpacing: 0.2,
+  },
+
+  /* ── Comment Input ── */
+  inputRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
   input: {
     flex: 1,
-    backgroundColor: '#f1f2f6',
-    padding: 8,
-    borderRadius: 5,
+    backgroundColor: 'rgba(4,30,75,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(4,30,75,0.12)',
+    borderRadius: 50,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 13,
+    color: NAV,
   },
-
   postBtn: {
-    backgroundColor: '#3A3D42',
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: NAV,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 50,
+    justifyContent: 'center',
+    shadowColor: NAV,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  postBtnText: {
+    color: CREAM,
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 0.5,
   },
 });
