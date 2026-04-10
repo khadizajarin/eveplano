@@ -61,7 +61,7 @@ export default function HomeScreen() {
         ) : (
           <TouchableOpacity
             style={styles.primaryButton}
-            // onPress={() => router.push('/login')}
+            onPress={() => router.push('/login')}
           >
             <ThemedText style={styles.buttonText}>Get Started</ThemedText>
           </TouchableOpacity>

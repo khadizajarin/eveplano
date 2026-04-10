@@ -1,68 +1,66 @@
 import { Tabs } from 'expo-router';
 import React, { useEffect } from 'react';
-import { HapticTab } from '@/components/haptic-tab';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Ionicons } from '@expo/vector-icons';  
+import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
-   const [loaded, error] = useFonts({
+  const [loaded, error] = useFonts({
     'BJCree-Regular': require('../../assets/fonts/BJCree-Regular.ttf'),
     'BJCree-Medium': require('../../assets/fonts/BJCree-Medium.ttf'),
     'BJCree-Bold': require('../../assets/fonts/BJCree-Bold.ttf'),
     'BJCree-SemiBold': require('../../assets/fonts/BJCree-SemiBold.ttf'),
   });
 
- useEffect(() => {
+  useEffect(() => {
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
 
-  if (!loaded && !error) {
-    return null;
-  }
+  if (!loaded && !error) return null;
 
   return (
-    <Tabs 
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+    <Tabs screenOptions={{ headerShown: false }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="home" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="home" size={24} color={color} />
+          ),
         }}
       />
+
       <Tabs.Screen
         name="explore"
         options={{
           title: 'Explore',
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="compass" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="compass" size={24} color={color} />
+          ),
         }}
       />
+
       <Tabs.Screen
         name="services"
         options={{
           title: 'Services',
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="bag" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="briefcase" size={24} color={color} />
+          ),
         }}
       />
 
-       <Tabs.Screen
+      <Tabs.Screen
         name="reviews"
         options={{
           title: 'Reviews',
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="star" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="star" size={24} color={color} />
+          ),
         }}
       />
     </Tabs>

@@ -9,8 +9,8 @@ import {
   TextInput,
   ToastAndroid,
 } from 'react-native';
-
-import { db } from '../hooks/firebase.config';
+// import AddReview from './AddReview';
+import app, { db } from '../hooks/firebase.config';
 import {
   collection,
   updateDoc,
@@ -20,6 +20,8 @@ import {
 } from 'firebase/firestore';
 
 import { MaterialCommunityIcons, Fontisto } from '@expo/vector-icons';
+import AddReview from '../../components/AddReviews';
+import useAuthentication from '../hooks/useAuthentication';
 
 type CommentType = {
   email: string;
@@ -42,9 +44,9 @@ const Reviews = () => {
   const [loading, setLoading] = useState(true);
   const [showComments, setShowComments] = useState<{ [key: number]: boolean }>({});
   const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
+  const { user } = useAuthentication(app);
 
-  // 👉 fake user (replace with auth later)
-  const user = { email: 'test@gmail.com' };
+  // console.log('Authenticated user:', user);
 
   const fetchReviews = async () => {
     try {
@@ -86,9 +88,9 @@ const Reviews = () => {
         const likedEmail = data.likedEmail || [];
 
         if (!likedEmail.includes(user.email)) {
-          await updateDoc(ref, {
-            likedEmail: [...likedEmail, user.email],
-          });
+          // await updateDoc(ref, {
+          //   likedEmail: [...likedEmail, user.email],
+          // });
 
           ToastAndroid.show('Liked!', ToastAndroid.SHORT);
           fetchReviews();
@@ -110,7 +112,7 @@ const Reviews = () => {
 
       const newComments = [
         ...(review.comments || []),
-        { email: user.email, commentText: text },
+        // { email: user.email, commentText: text },
       ];
 
       await updateDoc(ref, { comments: newComments });
@@ -151,6 +153,12 @@ const Reviews = () => {
 
         <View style={styles.divider} />
 
+        {/* {user && ( */}
+          <View style={styles.stickyAddReview}>
+            <AddReview />
+          </View>
+          {/* ) } */}
+
         {/* ── Review Cards ── */}
         {reviews.map((review, index) => (
           <View key={review.id} style={styles.reviewWrapper}>
@@ -177,23 +185,25 @@ const Reviews = () => {
                 <TouchableOpacity
                   style={[
                     styles.actionBtn,
-                    review.likedEmail?.includes(user.email) && styles.actionBtnActive,
+                    // review.likedEmail?.includes(user.email) && styles.actionBtnActive,
                   ]}
                   onPress={() => handleLike(review)}
                 >
                   <MaterialCommunityIcons
                     name={
-                      review.likedEmail?.includes(user.email)
+                      review.likedEmail//?.includes(user.email)
                         ? 'cards-heart'
                         : 'cards-heart-outline'
                     }
                     size={17}
-                    color={review.likedEmail?.includes(user.email) ? CREAM : NAV}
+                     color={review.likedEmail//?.includes(user.email)
+                       ? CREAM : NAV}
                   />
                   <Text
                     style={[
                       styles.actionText,
-                      review.likedEmail?.includes(user.email) && styles.actionTextActive,
+                      review.likedEmail//?.includes(user.email)
+                       && styles.actionTextActive,
                     ]}
                   >
                     {review.likedEmail?.length || 0}
