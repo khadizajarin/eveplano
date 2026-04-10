@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
 
   /* ── Header ── */
   header: {
+    fontFamily: 'BJCree-Regular',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -149,8 +150,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
+    fontFamily: 'BJCree-Bold',
     fontSize: 18,
-    fontWeight: '800',
+    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.4,
     lineHeight: 22,
@@ -158,6 +160,7 @@ const styles = StyleSheet.create({
 
   /* ── Input ── */
   input: {
+    fontFamily: 'BJCree-SemiBold',
     backgroundColor: 'rgba(4,30,75,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(4,30,75,0.12)',
@@ -190,8 +193,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
+    fontFamily: 'BJCree-Bold',
     color: CREAM,
-    fontWeight: '700',
+    // fontWeight: '700',
     fontSize: 13,
     letterSpacing: 0.8,
   },

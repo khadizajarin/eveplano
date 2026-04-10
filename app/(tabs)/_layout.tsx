@@ -20,7 +20,6 @@ export default function TabLayout() {
     }
   }, [loaded, error]);
 
-  if (!loaded && !error) return null;
 
   return (
     <Tabs screenOptions={{ headerShown: false }}>

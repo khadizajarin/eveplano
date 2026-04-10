@@ -15,7 +15,6 @@ import {
   collection,
   updateDoc,
   doc,
-  getDocs,
   getDoc,
   onSnapshot,
 } from 'firebase/firestore';
@@ -47,7 +46,7 @@ const Reviews = () => {
   const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
   const { user } = useAuthentication(app);
 
-  console.log('Authenticated user:', user.email);
+  // console.log('Authenticated user:', user.email);
 
   useEffect(() => {
   const unsub = onSnapshot(collection(db, 'reviews'), (snap) => {
@@ -73,52 +72,63 @@ const Reviews = () => {
   };
 
   const handleLike = async (review: ReviewType) => {
-    try {
-      const ref = doc(db, 'reviews', review.id);
-      const snap = await getDoc(ref);
+  try {
+    const ref = doc(db, 'reviews', review.id);
+    const snap = await getDoc(ref);
 
-      if (snap.exists()) {
-        const data = snap.data();
-        const likedEmail = data.likedEmail || [];
+    if (!snap.exists()) return;
 
-        if (!likedEmail.includes(user.email)) {
-          await updateDoc(ref, {
-            likedEmail: [...likedEmail, user.email],
-          });
+    const data = snap.data();
+    const likedEmail: string[] = data.likedEmail || [];
 
-          ToastAndroid.show('Liked!', ToastAndroid.SHORT);
-          // fetchReviews();
-        } else {
-          ToastAndroid.show('Already liked', ToastAndroid.SHORT);
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    const isLiked = likedEmail.includes(user.email);
+
+    const updatedLikes = isLiked
+      ? likedEmail.filter(email => email !== user.email) 
+      : [...likedEmail, user.email]; 
+
+    await updateDoc(ref, {
+      likedEmail: updatedLikes,
+    });
+
+    ToastAndroid.show(
+      isLiked ? 'Like removed' : 'Liked!',
+      ToastAndroid.SHORT
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const handlePostComment = async (review: ReviewType, index: number) => {
-    const text = commentTexts[index];
-    if (!text) return;
+  const text = commentTexts[index]?.trim();
+  if (!text) return;
 
-    try {
-      const ref = doc(db, 'reviews', review.id);
+  try {
+    const ref = doc(db, 'reviews', review.id);
 
-      const newComments = [
-        ...(review.comments || []),
-        { email: user.email, commentText: text },
-      ];
 
-      await updateDoc(ref, { comments: newComments });
+    const currentComments = review.comments ?? [];
 
-      ToastAndroid.show('Comment posted', ToastAndroid.SHORT);
+    const newComments = [
+      ...currentComments,
+      {
+        email: user.email,
+        commentText: text,
+      },
+    ];
 
-      setCommentTexts((prev) => ({ ...prev, [index]: '' }));
-      // fetchReviews();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    await updateDoc(ref, {
+      comments: newComments,
+    });
+
+    setCommentTexts((prev) => ({ ...prev, [index]: '' }));
+
+    ToastAndroid.show('Comment posted', ToastAndroid.SHORT);
+  } catch (error) {
+    console.error('comment error:', error);
+  }
+};
 
   if (loading)
     return (
@@ -141,14 +151,14 @@ const Reviews = () => {
           <View style={styles.headerAccent} />
           <View>
             <Text style={styles.eyebrow}>CLIENT FEEDBACK</Text>
-            <Text style={styles.headerTitle}>See What Our Clients Say!</Text>
+            <Text style={styles.headerTitle}>Reviews</Text>
           </View>
         </View>
 
         <View style={styles.divider} />
 
         {/* {user && ( */}
-          <View style={styles.stickyAddReview}>
+          <View >
             <AddReview />
           </View>
           {/* ) } */}
@@ -179,24 +189,25 @@ const Reviews = () => {
                 <TouchableOpacity
                   style={[
                     styles.actionBtn,
-                    review.likedEmail?.includes(user.email) && styles.actionBtnActive,
+                    review.likedEmail//?.includes(user.email) 
+                    && styles.actionBtnActive,
                   ]}
                   onPress={() => handleLike(review)}
                 >
                   <MaterialCommunityIcons
                     name={
-                      review.likedEmail?.includes(user.email)
+                      review.likedEmail//?.includes(user.email)
                         ? 'cards-heart'
                         : 'cards-heart-outline'
                     }
                     size={17}
-                     color={review.likedEmail?.includes(user.email)
+                     color={review.likedEmail//?.includes(user.email)
                        ? CREAM : NAV}
                   />
                   <Text
                     style={[
                       styles.actionText,
-                      review.likedEmail?.includes(user.email)
+                      review.likedEmail//?.includes(user.email)
                        && styles.actionTextActive,
                     ]}
                   >
@@ -317,15 +328,17 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   eyebrow: {
+    fontFamily: 'BJCree-Regular',
     fontSize: 10,
-    fontWeight: '700',
+    // fontWeight: '700',
     color: 'rgba(4,30,75,0.45)',
     letterSpacing: 3,
     marginBottom: 5,
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: 'BJCree-Bold',
+    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.6,
     lineHeight: 34,
@@ -360,8 +373,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   reviewText: {
+    fontFamily: 'BJCree-SemiBold',
     fontSize: 16,
-    fontWeight: '600',
+    // fontWeight: '600',
     color: NAV,
     lineHeight: 24,
     letterSpacing: 0.1,
@@ -380,9 +394,10 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   emailText: {
-    fontSize: 12,
+    fontSize: 13,
+    fontFamily: 'BJCree-Regular',
     color: 'rgba(4,30,75,0.55)',
-    fontWeight: '600',
+    // fontWeight: '600',
     letterSpacing: 0.3,
   },
 
@@ -408,7 +423,8 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'BJCree-Regular',
+    // fontWeight: '700',
     color: NAV,
     letterSpacing: 0.2,
   },
@@ -442,6 +458,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(4,30,75,0.08)',
   },
   commentText: {
+    fontFamily: 'BJCree-Regular',
     fontSize: 14,
     color: NAV,
     lineHeight: 20,
@@ -449,7 +466,8 @@ const styles = StyleSheet.create({
   },
   commentEmail: {
     fontSize: 11,
-    color: 'rgba(4,30,75,0.45)',
+    fontFamily: 'BJCree-SemiBold',
+    color: 'rgba(15, 20, 29, 0.45)',
     fontWeight: '600',
     marginTop: 5,
     letterSpacing: 0.2,

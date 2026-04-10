@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   container: {
-    fontFamily: 'BJCree-Regular',
+    // fontFamily: 'BJCree-Regular',
     paddingHorizontal: 20,
     paddingTop: 56,
   },
