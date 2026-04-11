@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   brandTitle: {
-    fontFamily: 'BJCree-Regular',
+    fontFamily: 'BJCree-Bold',
     fontSize: 32,
     // fontWeight: '800',
     color: NAV,
