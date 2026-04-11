@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import useAuth from '../hooks/useAuth';
+import { db } from '../hooks/firebase.config';
+import { doc, setDoc } from 'firebase/firestore';
 
 const NAV   = '#041e4b';
 const CREAM = '#fffefd';
@@ -22,13 +24,29 @@ export default function Register() {
   const [password, setPassword] = useState('');
 
   const handleRegister = async () => {
-    try {
-      await register(email, password);
-      router.replace('/(tabs)');
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  try {
+    const userCredential = await register(email, password);
+
+    const user = userCredential.user;
+
+    // ✅ Save to Firestore
+    await setDoc(doc(db, 'users', user.uid), {
+      email: user.email,
+      role: 'user',
+      displayName:'',
+      phonenumber:'',
+      photoURL:'',
+      City:'',
+      Country:'',
+      Devision:'',
+      createdAt: new Date(),
+    });
+
+    router.replace('/(tabs)');
+  } catch (e) {
+    console.log(e);
+  }
+};
 
   return (
     <KeyboardAvoidingView
