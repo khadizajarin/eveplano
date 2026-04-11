@@ -326,9 +326,10 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonText: {
+    fontFamily: 'BJCree-Bold',
     color: CREAM,
     fontSize: 13,
-    fontWeight: '700',
+    // fontWeight: '700',
     letterSpacing: 0.8,
   },
   buttonArrow: {
@@ -352,8 +353,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(4,30,75,0.12)',
   },
   endText: {
+    fontFamily: 'BJCree-Bold',
     fontSize: 11,
-    fontWeight: '600',
+    // fontWeight: '600',
     color: 'rgba(4,30,75,0.38)',
     letterSpacing: 1.5,
   },

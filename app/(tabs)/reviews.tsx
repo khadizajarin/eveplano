@@ -157,11 +157,13 @@ const Reviews = () => {
 
         <View style={styles.divider} />
 
-        {/* {user && ( */}
-          <View >
-            <AddReview />
-          </View>
-          {/* ) } */}
+         {!user ? (
+          <Text style={{ textAlign: 'center', marginTop: 5, marginBottom: 20, color: 'rgba(4,30,75,0.45)',fontFamily: 'BJCree-Regular', }}>
+            Please login to add review
+          </Text>
+        ) : (
+          <AddReview />
+        )}
 
         {/* ── Review Cards ── */}
         {reviews.map((review, index) => (

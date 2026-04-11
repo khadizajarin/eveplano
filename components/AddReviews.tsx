@@ -30,7 +30,7 @@ const AddReview = () => {
         <ActivityIndicator size="small" color={NAV} />
       </View>
     );
-  if (!user) return <Redirect href="/login" />;
+  // if (!user) return <Redirect href="/login" />;
 
   const handleAddReview = async () => {
     if (!reviewText.trim()) {
