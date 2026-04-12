@@ -269,18 +269,19 @@ export default function Profile() {
                 defaultValue={userData?.photoURL}
                 onChangeText={setPhotoURL}
               />
+                <TouchableOpacity
+                  style={styles.outlineButton}
+                  onPress={pickImage}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.outlineButtonText}>Pick from Gallery</Text>
+                </TouchableOpacity>
+
             </View>
           </View>
 
           {/* Pick Image */}
-          <TouchableOpacity
-            style={styles.outlineButton}
-            onPress={pickImage}
-            activeOpacity={0.75}
-          >
-            <Text style={styles.outlineButtonText}>Pick from Gallery</Text>
-          </TouchableOpacity>
-
+        
           {/* Save */}
           <TouchableOpacity
             style={styles.primaryButton}
@@ -504,6 +505,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(4,30,75,0.25)',
     marginBottom: 12,
+    marginTop: 10,
   },
   outlineButtonText: {
     fontFamily: 'BJCree-Bold',
