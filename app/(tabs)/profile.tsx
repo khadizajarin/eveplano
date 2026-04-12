@@ -38,6 +38,7 @@ type UserType = {
   displayName?: string;
   phoneNumber?: string;
   photoURL?: string;
+  role?: string;
 };
 
 // ---------- STORAGE ----------
@@ -192,6 +193,12 @@ export default function Profile() {
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>PHONE</Text>
           <Text style={styles.infoValue}>{userData?.phoneNumber || '—'}</Text>
+        </View>
+        <View style={styles.infoDivider} />
+
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>ROLE</Text>
+          <Text style={styles.infoValue}>{userData?.role || '—'}</Text>
         </View>
       </View>
 
