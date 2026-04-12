@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import useAuthentication from '../hooks/useAuthentication';
 import { auth } from '../hooks/firebase.config';
+import Upcoming from '../../components/Upcoming';
 
 export default function HomeScreen() {
   const { user } = useAuthentication();
@@ -66,6 +67,9 @@ export default function HomeScreen() {
             <ThemedText style={styles.buttonText}>Get Started</ThemedText>
           </TouchableOpacity>
         )}
+      </View>
+      <View>
+        <Upcoming/>
       </View>
     </ParallaxScrollView>
   );
