@@ -1,13 +1,13 @@
-import { Image } from 'expo-image';
 import { StyleSheet, TouchableOpacity, View, ToastAndroid, Text } from 'react-native';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import useAuthentication from '../hooks/useAuthentication';
 import { auth } from '../hooks/firebase.config';
 import Upcoming from '../../components/Upcoming';
+import AnimatedHeader from '../../components/Animatedheader';
+
 
 const NAV   = '#041e4b';
 const CREAM = '#fffefd';
@@ -28,12 +28,7 @@ export default function HomeScreen() {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: NAV, dark: NAV }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.headerImage}
-        />
-      }
+      headerImage={<AnimatedHeader />}
     >
       {/* ── Brand Block ── */}
       <ThemedView style={styles.brandBlock}>
@@ -64,9 +59,7 @@ export default function HomeScreen() {
       {user && (
         <View style={styles.userPill}>
           <View style={styles.userDot} />
-          <Text style={styles.userText}>
-            {user.email}
-          </Text>
+          <Text style={styles.userText}>{user.email}</Text>
         </View>
       )}
 
@@ -98,15 +91,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    height: 180,
-    width: 260,
-    position: 'absolute',
-    bottom: 0,
-    left: 20,
-    opacity: 0.85,
-  },
-
   /* ── Brand Block ── */
   brandBlock: {
     marginTop: 8,
@@ -208,7 +192,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     alignSelf: 'flex-start',
-    marginHorizontal: 20,
+    // marginHorizontal: 20,
     marginBottom: 16,
     backgroundColor: 'rgba(4,30,75,0.06)',
     borderRadius: 50,
