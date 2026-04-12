@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
-import useAuth from '../hooks/useAuth';
+import useAuth from '../hooks/useAuthentication';
 
 const NAV   = '#041e4b';
 const CREAM = '#fffefd';

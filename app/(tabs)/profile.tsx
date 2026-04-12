@@ -12,8 +12,8 @@ import {
   ScrollView,
 } from 'react-native';
 
-import { signOut } from '@firebase/auth';
-import { useNavigation } from 'expo-router';
+import { signOut } from 'firebase/auth';
+import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import {
   collection,
@@ -27,7 +27,7 @@ import {
 import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useAuthentication from '../hooks/useAuthentication';
-import app, { db } from '../hooks/firebase.config';
+import { db } from '../hooks/firebase.config';
 
 const NAV   = '#041e4b';
 const CREAM = '#fffefd';
@@ -39,127 +39,95 @@ type UserType = {
   photoURL?: string;
 };
 
-// ---------------- STORAGE ----------------
+// ---------- STORAGE ----------
 const getUserDataFromStorage = async () => {
-  try {
-    const data = await AsyncStorage.getItem('userData');
-    return data ? JSON.parse(data) : null;
-  } catch {
-    return null;
-  }
-};
-
-const requestPermission = async () => {
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (status !== 'granted') {
-    alert('Permission needed!');
-  }
+  const data = await AsyncStorage.getItem('userData');
+  return data ? JSON.parse(data) : null;
 };
 
 const saveUserDataToStorage = async (data: UserType) => {
-  try {
-    await AsyncStorage.setItem('userData', JSON.stringify(data));
-  } catch {}
+  await AsyncStorage.setItem('userData', JSON.stringify(data));
 };
 
-// ---------------- COMPONENT ----------------
-const Profile = () => {
-  const navigation = useNavigation();
-  const { user, auth } = useAuthentication(app);
+// ---------- COMPONENT ----------
+export default function Profile() {
+  const { user, auth } = useAuthentication();
 
+  const [userData, setUserData]             = useState<UserType | null>(null);
+  const [isLoading, setIsLoading]           = useState(true);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
-  const [displayName, setDisplayName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [photoURL, setPhotoURL] = useState('');
+  const [displayName, setDisplayName]       = useState('');
+  const [phoneNumber, setPhoneNumber]       = useState('');
+  const [photoURL, setPhotoURL]             = useState('');
 
-  const [userData, setUserData] = useState<UserType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // ---------------- FETCH USER ----------------
+  // ---------- FETCH ----------
   useEffect(() => {
-    const fetchFromDB = async () => {
+    const fetchUser = async () => {
       if (!user?.email) return;
-      try {
-        const q = query(collection(db, 'users'), where('email', '==', user.email));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const data = snap.docs[0].data() as UserType;
-          setUserData(data);
-          saveUserDataToStorage(data);
-        }
-      } catch (err) {
-        console.log(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    const init = async () => {
       const cached = await getUserDataFromStorage();
       if (cached) {
         setUserData(cached);
         setIsLoading(false);
-      } else {
-        fetchFromDB();
+        return;
       }
+
+      const q = query(collection(db, 'users'), where('email', '==', user.email));
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        const data = snap.docs[0].data() as UserType;
+        setUserData(data);
+        saveUserDataToStorage(data);
+      }
+
+      setIsLoading(false);
     };
 
-    init();
+    fetchUser();
   }, [user]);
 
-  // ---------------- LOGOUT ----------------
+  // ---------- LOGOUT ----------
   const handleLogOut = async () => {
     await signOut(auth);
     await AsyncStorage.clear();
-    navigation.navigate('/');
+    router.replace('/login');
     ToastAndroid.show('Logged out', ToastAndroid.SHORT);
   };
 
-  // ---------------- IMAGE PICK ----------------
+  // ---------- IMAGE ----------
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
       quality: 1,
     });
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setPhotoURL(uri);
-    }
+    if (!res.canceled) setPhotoURL(res.assets[0].uri);
   };
 
-  // ---------------- UPDATE STORAGE ----------------
-  const updateAsyncStorage = async (updated: Partial<UserType>) => {
-    const existing = await AsyncStorage.getItem('userData');
-    const parsed = existing ? JSON.parse(existing) : {};
-    const merged = { ...parsed, ...updated };
-    await AsyncStorage.setItem('userData', JSON.stringify(merged));
-  };
-
-  // ---------------- UPDATE PROFILE ----------------
+  // ---------- UPDATE ----------
   const handleUpdateProfile = async () => {
     if (!user || !userData) return;
-    try {
-      const updatedData: UserType = {
-        email: user.email,
-        displayName: displayName || userData.displayName,
-        phoneNumber: phoneNumber || userData.phoneNumber,
-        photoURL: photoURL || userData.photoURL,
-      };
-      const ref = doc(db, 'users', user.uid);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) { console.log('User doc missing'); return; }
-      await updateDoc(ref, updatedData);
-      await updateAsyncStorage(updatedData);
-      setUserData(updatedData);
-      setShowUpdateForm(false);
-      ToastAndroid.show('Profile updated', ToastAndroid.SHORT);
-    } catch (err) {
-      console.log(err);
-    }
+
+    const updated: UserType = {
+      email: user.email!,
+      displayName: displayName || userData.displayName,
+      phoneNumber: phoneNumber || userData.phoneNumber,
+      photoURL: photoURL || userData.photoURL,
+    };
+
+    const ref  = doc(db, 'users', user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+
+    await updateDoc(ref, updated);
+    await saveUserDataToStorage(updated);
+
+    setUserData(updated);
+    setShowUpdateForm(false);
+    ToastAndroid.show('Profile updated', ToastAndroid.SHORT);
   };
 
-  // ---------------- UI ----------------
+  // ---------- LOADER ----------
   if (isLoading) {
     return (
       <View style={styles.loaderScreen}>
@@ -169,6 +137,7 @@ const Profile = () => {
     );
   }
 
+  // ---------- UI ----------
   return (
     <ScrollView
       style={styles.scroll}
@@ -192,7 +161,7 @@ const Profile = () => {
             <Image source={{ uri: userData.photoURL }} style={styles.avatarImage} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <AntDesign name="user" size={72} color="rgba(4,30,75,0.30)" />
+              <AntDesign name="user" size={68} color="rgba(4,30,75,0.28)" />
             </View>
           )}
         </View>
@@ -225,7 +194,7 @@ const Profile = () => {
         </View>
       </View>
 
-      {/* ── Action Buttons ── */}
+      {/* ── Buttons ── */}
       <TouchableOpacity
         style={styles.primaryButton}
         onPress={() => setShowUpdateForm(true)}
@@ -244,112 +213,100 @@ const Profile = () => {
       </TouchableOpacity>
 
       {/* ── UPDATE MODAL ── */}
-      {userData && (
-        <Modal visible={showUpdateForm} animationType="slide">
-          <ScrollView
-            style={styles.modalScroll}
-            contentContainerStyle={styles.modalContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
+      <Modal visible={showUpdateForm} animationType="slide">
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Modal Header */}
+          <View style={styles.header}>
+            <View style={styles.headerAccent} />
+            <View>
+              <Text style={styles.eyebrow}>ACCOUNT</Text>
+              <Text style={styles.headerTitle}>Edit Profile</Text>
+            </View>
+          </View>
+          <View style={styles.divider} />
+
+          {/* Fields Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeaderRow}>
+              <View style={styles.accentLine} />
+              <Text style={styles.cardLabel}>Update Details</Text>
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Display Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your name"
+                placeholderTextColor="rgba(4,30,75,0.30)"
+                defaultValue={userData?.displayName}
+                onChangeText={setDisplayName}
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Phone Number</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter phone number"
+                placeholderTextColor="rgba(4,30,75,0.30)"
+                defaultValue={userData?.phoneNumber}
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Photo URL</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Paste image URL"
+                placeholderTextColor="rgba(4,30,75,0.30)"
+                defaultValue={userData?.photoURL}
+                onChangeText={setPhotoURL}
+              />
+            </View>
+          </View>
+
+          {/* Pick Image */}
+          <TouchableOpacity
+            style={styles.outlineButton}
+            onPress={pickImage}
+            activeOpacity={0.75}
           >
-            {/* Modal Header */}
-            <View style={styles.header}>
-              <View style={styles.headerAccent} />
-              <View>
-                <Text style={styles.eyebrow}>ACCOUNT</Text>
-                <Text style={styles.headerTitle}>Edit Profile</Text>
-              </View>
-            </View>
-            <View style={styles.divider} />
+            <Text style={styles.outlineButtonText}>Pick from Gallery</Text>
+          </TouchableOpacity>
 
-            {/* Fields */}
-            <View style={styles.card}>
-              <View style={styles.cardHeaderRow}>
-                <View style={styles.accentLine} />
-                <Text style={styles.cardLabel}>Update Details</Text>
-              </View>
+          {/* Save */}
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleUpdateProfile}
+            activeOpacity={0.82}
+          >
+            <Text style={styles.primaryButtonText}>Save Changes</Text>
+            <Text style={styles.buttonArrow}>→</Text>
+          </TouchableOpacity>
 
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Email Address</Text>
-                <TextInput
-                  style={[styles.input, styles.inputDisabled]}
-                  value={userData.email}
-                  editable={false}
-                />
-              </View>
+          {/* Cancel */}
+          <TouchableOpacity
+            style={styles.ghostButton}
+            onPress={() => setShowUpdateForm(false)}
+            activeOpacity={0.75}
+          >
+            <Text style={styles.ghostButtonText}>Cancel</Text>
+          </TouchableOpacity>
 
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Display Name</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your name"
-                  placeholderTextColor="rgba(4,30,75,0.30)"
-                  defaultValue={userData.displayName}
-                  onChangeText={setDisplayName}
-                />
-              </View>
-
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Phone Number</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter phone number"
-                  placeholderTextColor="rgba(4,30,75,0.30)"
-                  defaultValue={userData.phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Photo URL</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Paste image URL"
-                  placeholderTextColor="rgba(4,30,75,0.30)"
-                  defaultValue={userData.photoURL}
-                  onChangeText={setPhotoURL}
-                />
-              </View>
-            </View>
-
-            {/* Pick Image */}
-            <TouchableOpacity
-              style={styles.outlineButton}
-              onPress={pickImage}
-              activeOpacity={0.75}
-            >
-              <Text style={styles.outlineButtonText}>Pick from Gallery</Text>
-            </TouchableOpacity>
-
-            {/* Save / Cancel */}
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={handleUpdateProfile}
-              activeOpacity={0.82}
-            >
-              <Text style={styles.primaryButtonText}>Save Changes</Text>
-              <Text style={styles.buttonArrow}>→</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.ghostButton}
-              onPress={() => setShowUpdateForm(false)}
-              activeOpacity={0.75}
-            >
-              <Text style={styles.ghostButtonText}>Cancel</Text>
-            </TouchableOpacity>
-
-          </ScrollView>
-        </Modal>
-      )}
+        </ScrollView>
+      </Modal>
     </ScrollView>
   );
-};
+}
 
-export default Profile;
-
-// ---------------- STYLES ----------------
+// ---------- STYLES ----------
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
@@ -360,6 +317,8 @@ const styles = StyleSheet.create({
     paddingTop: 56,
     paddingBottom: 48,
   },
+
+  /* ── Loader ── */
   loaderScreen: {
     flex: 1,
     backgroundColor: CREAM,
@@ -371,7 +330,6 @@ const styles = StyleSheet.create({
     fontFamily: 'BJCree-Regular',
     fontSize: 13,
     color: 'rgba(4,30,75,0.50)',
-    // fontWeight: '500',
     letterSpacing: 0.3,
   },
 
@@ -389,9 +347,8 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   eyebrow: {
-    fontFamily: 'BJCree-Regular',
+    fontFamily: 'BJCree-Bold',
     fontSize: 10,
-    // fontWeight: '700',
     color: 'rgba(4,30,75,0.45)',
     letterSpacing: 3,
     marginBottom: 5,
@@ -399,7 +356,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: 'BJCree-Bold',
     fontSize: 30,
-    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.7,
     lineHeight: 36,
@@ -424,13 +380,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(4,30,75,0.05)',
     shadowColor: NAV,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.18,
     shadowRadius: 14,
     elevation: 8,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(4,30,75,0.05)',
   },
   avatarImage: {
     width: 120,
@@ -442,9 +398,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarName: {
-    fontFamily: 'BJCree-SemiBold',
+    fontFamily: 'BJCree-Bold',
     fontSize: 20,
-    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.4,
     marginBottom: 4,
@@ -453,7 +408,6 @@ const styles = StyleSheet.create({
     fontFamily: 'BJCree-Regular',
     fontSize: 13,
     color: 'rgba(4,30,75,0.50)',
-    // fontWeight: '500',
     letterSpacing: 0.2,
   },
 
@@ -484,33 +438,30 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   cardLabel: {
-    fontFamily: 'BJCree-Regular',
+    fontFamily: 'BJCree-Bold',
     fontSize: 12,
-    // fontWeight: '700',
-    color: 'rgb(4, 30, 75)',
+    color: 'rgba(4,30,75,0.55)',
     letterSpacing: 1.5,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 11,
   },
   infoDivider: {
     height: 1,
     backgroundColor: 'rgba(4,30,75,0.07)',
   },
   infoLabel: {
-    fontFamily: 'BJCree-Regular',
+    fontFamily: 'BJCree-Bold',
     fontSize: 10,
-    // fontWeight: '700',
-    color: 'rgba(4, 30, 75, 0.74)',
+    color: 'rgba(4,30,75,0.40)',
     letterSpacing: 2,
   },
   infoValue: {
-    fontFamily: 'BJCree-SemiBold',
+    fontFamily: 'BJCree-Regular',
     fontSize: 14,
-    fontWeight: '600',
     color: NAV,
     letterSpacing: 0.1,
     maxWidth: '65%',
@@ -536,7 +487,6 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontFamily: 'BJCree-Bold',
     color: CREAM,
-    // fontWeight: '700',
     fontSize: 14,
     letterSpacing: 0.8,
   },
@@ -558,7 +508,6 @@ const styles = StyleSheet.create({
   outlineButtonText: {
     fontFamily: 'BJCree-Bold',
     color: NAV,
-    // fontWeight: '700',
     fontSize: 13,
     letterSpacing: 0.5,
   },
@@ -567,30 +516,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   ghostButtonText: {
-    fontFamily: 'BJCree-SemiBold',
-    color: 'rgba(4, 30, 75, 0.76)',
-    // fontWeight: '600',
+    fontFamily: 'BJCree-Regular',
+    color: 'rgba(4,30,75,0.40)',
     fontSize: 13,
     letterSpacing: 0.3,
   },
 
-  /* ── Modal ── */
-  modalScroll: {
-    flex: 1,
-    backgroundColor: CREAM,
-  },
-  modalContent: {
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 48,
-  },
+  /* ── Modal Fields ── */
   fieldGroup: {
     marginBottom: 14,
   },
   fieldLabel: {
-    fontFamily: 'BJCree-Regular',
+    fontFamily: 'BJCree-Bold',
     fontSize: 11,
-    // fontWeight: '700',
     color: 'rgba(4,30,75,0.55)',
     letterSpacing: 1.5,
     marginBottom: 8,
@@ -605,8 +543,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 14,
     color: NAV,
-  },
-  inputDisabled: {
-    opacity: 0.5,
   },
 });

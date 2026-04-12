@@ -10,22 +10,21 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
-import useAuth from '../hooks/useAuth';
 import { db } from '../hooks/firebase.config';
 import { doc, setDoc } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 
 const NAV   = '#041e4b';
 const CREAM = '#fffefd';
 
 export default function Register() {
-  const { register } = useAuth();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleRegister = async () => {
   try {
-    const userCredential = await register(email, password);
+    const auth = getAuth();
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
     const user = userCredential.user;
 

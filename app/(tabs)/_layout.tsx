@@ -4,9 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
+import useAuthentication from '../hooks/useAuthentication';
+
 SplashScreen.preventAutoHideAsync();
 
 export default function TabLayout() {
+  const { user } = useAuthentication(); // ✅ fixed
+
   const [loaded, error] = useFonts({
     'BJCree-Regular': require('../../assets/fonts/BJCree-Regular.ttf'),
     'BJCree-Medium': require('../../assets/fonts/BJCree-Medium.ttf'),
@@ -20,9 +24,11 @@ export default function TabLayout() {
     }
   }, [loaded, error]);
 
+  if (!loaded && !error) return null;
 
   return (
     <Tabs screenOptions={{ headerShown: false }}>
+      
       <Tabs.Screen
         name="index"
         options={{
@@ -53,15 +59,18 @@ export default function TabLayout() {
         }}
       />
 
+      {/* ✅ Always declare screen */}
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
+          href: user ? undefined : null, // 🔥 hide if not logged in
           tabBarIcon: ({ color }) => (
             <Ionicons name="person" size={24} color={color} />
           ),
         }}
       />
+
     </Tabs>
   );
 }
