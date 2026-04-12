@@ -9,7 +9,7 @@ import useAuthentication from '../hooks/useAuthentication';
 SplashScreen.preventAutoHideAsync();
 
 export default function TabLayout() {
-  const { user } = useAuthentication(); // ✅ fixed
+  const { user } = useAuthentication(); 
 
   const [loaded, error] = useFonts({
     'BJCree-Regular': require('../../assets/fonts/BJCree-Regular.ttf'),

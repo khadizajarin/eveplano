@@ -40,7 +40,7 @@ const Upcoming: React.FC = () => {
       <View style={styles.header}>
         <View style={styles.headerAccent} />
         <View>
-          <Text style={styles.eyebrow}>WHAT'S NEXT</Text>
+          <Text style={styles.eyebrow}>WHAT&apos;S NEXT</Text>
           <Text style={styles.heading}>Upcoming{'\n'}Social Events</Text>
         </View>
       </View>
