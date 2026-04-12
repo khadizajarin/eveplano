@@ -50,6 +50,12 @@
           }
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos"
+        }
+      ],
       "expo-font"
     ],
     "experiments": {
