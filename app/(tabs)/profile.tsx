@@ -28,6 +28,7 @@ import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useAuthentication from '../hooks/useAuthentication';
 import { db } from '../hooks/firebase.config';
+import Bookings from '../../components/Bookings';
 
 const NAV   = '#041e4b';
 const CREAM = '#fffefd';
@@ -301,8 +302,14 @@ export default function Profile() {
             <Text style={styles.ghostButtonText}>Cancel</Text>
           </TouchableOpacity>
 
+        
+
         </ScrollView>
       </Modal>
+
+        <View>
+            <Bookings/>
+          </View>
     </ScrollView>
   );
 }
