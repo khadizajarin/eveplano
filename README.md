@@ -66,7 +66,7 @@ This app lets users view event services, book a service, and receive instant con
 1. Clone this repo:
    ```bash
    git clone https://github.com/khadizajarin/eveplano
-   cd your-event-booking-app
+   cd eveplano
    ```
 
 2. Install dependencies:

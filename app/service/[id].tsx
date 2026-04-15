@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { db } from '../hooks/firebase.config';
 import {
@@ -44,6 +45,25 @@ const ServiceDetails = () => {
   const [location, setLocation]                 = useState('');
   const [phoneNumber, setPhoneNumber]           = useState('');
   const [specialRequirements, setSpecialRequirements] = useState('');
+  const [eventDate, setEventDate]               = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker]     = useState(false);
+
+  // ── Date picker handler ──
+  const onChangeDatePicker = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setEventDate(selectedDate);
+    }
+  };
+
+  const showDatepicker = () => {
+    DateTimePickerAndroid.open({
+      value: eventDate || new Date(),
+      mode: 'date',
+      display: 'default',
+      onChange: onChangeDatePicker,
+    });
+  };
 
   // ── Fetch service ──
   useEffect(() => {
@@ -61,8 +81,11 @@ const ServiceDetails = () => {
 
   // ── Submit booking ──
   const handleBooking = async () => {
-    if (!numberOfGuests || !location || !phoneNumber) {
-      ToastAndroid.show('Please fill all required fields', ToastAndroid.SHORT);
+    if (!numberOfGuests || !location || !phoneNumber || !eventDate) {
+      ToastAndroid.show(
+        'Please fill all required fields including date',
+        ToastAndroid.SHORT
+      );
       return;
     }
 
@@ -70,15 +93,16 @@ const ServiceDetails = () => {
       setSubmitting(true);
 
       await addDoc(collection(db, 'bookings'), {
-        serviceId:           data.id,
-        serviceName:         data.name,
-        user:                user?.email || 'guest',
+        serviceId:      data.id,
+        serviceName:    data.name,
+        user:           user?.email || 'guest',
         numberOfGuests,
-        venue:               location,
+        venue:          location,
         phoneNumber,
         specialRequirements,
-        progress:            'pending',
-        createdAt:           serverTimestamp(),
+        eventDate,                           // 👈 date to Firestore
+        progress:       'pending',
+        createdAt:      serverTimestamp(),
       });
 
       setShowBooking(false);
@@ -89,6 +113,7 @@ const ServiceDetails = () => {
       setLocation('');
       setPhoneNumber('');
       setSpecialRequirements('');
+      setEventDate(null);
 
     } catch (err) {
       console.error(err);
@@ -132,7 +157,6 @@ const ServiceDetails = () => {
 
         {/* ── Content ── */}
         <View style={styles.content}>
-
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerAccent} />
@@ -170,9 +194,9 @@ const ServiceDetails = () => {
             activeOpacity={0.82}
             onPress={() => {
               if (!user) {
-                router.push('/login'); 
+                router.push('/login');
               } else {
-                setShowBooking(true); 
+                setShowBooking(true);
               }
             }}
           >
@@ -184,7 +208,6 @@ const ServiceDetails = () => {
           <View style={{ marginTop: 8 }}>
             <Video />
           </View>
-
         </View>
       </ScrollView>
 
@@ -270,6 +293,31 @@ const ServiceDetails = () => {
                 />
               </View>
 
+              {/* Event Date */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>
+                  Event Date <Text style={styles.required}>*</Text>
+                </Text>
+                <TouchableOpacity
+                  style={styles.input}
+                  activeOpacity={0.8}
+                  onPress={showDatepicker}
+                >
+                  <Text
+                    style={{
+                      fontFamily: 'BJCree-Regular',
+                      fontSize: 14,
+                      color: NAV,
+                      opacity: eventDate ? 1 : 0.5,
+                    }}
+                  >
+                    {eventDate
+                      ? eventDate.toLocaleDateString()
+                      : 'Tap to select date'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Phone */}
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>
@@ -318,13 +366,14 @@ const ServiceDetails = () => {
               onPress={handleBooking}
               disabled={submitting}
             >
-              {submitting
-                ? <ActivityIndicator size="small" color={CREAM} />
-                : <>
-                    <Text style={styles.bookButtonText}>Confirm Booking</Text>
-                    <Text style={styles.bookButtonArrow}>→</Text>
-                  </>
-              }
+              {submitting ? (
+                <ActivityIndicator size="small" color={CREAM} />
+              ) : (
+                <>
+                  <Text style={styles.bookButtonText}>Confirm Booking</Text>
+                  <Text style={styles.bookButtonArrow}>→</Text>
+                </>
+              )}
             </TouchableOpacity>
 
             {/* Cancel */}
@@ -335,7 +384,6 @@ const ServiceDetails = () => {
             >
               <Text style={styles.ghostButtonText}>Cancel</Text>
             </TouchableOpacity>
-
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
@@ -346,7 +394,6 @@ const ServiceDetails = () => {
       <Modal visible={showSuccess} transparent animationType="fade">
         <View style={styles.successOverlay}>
           <View style={styles.successCard}>
-
             <View style={styles.successIconWrapper}>
               <Text style={styles.successIcon}>✓</Text>
             </View>
@@ -365,7 +412,6 @@ const ServiceDetails = () => {
             >
               <Text style={styles.bookButtonText}>Done</Text>
             </TouchableOpacity>
-
           </View>
         </View>
       </Modal>
@@ -381,16 +427,23 @@ const styles = StyleSheet.create({
 
   /* ── Loader ── */
   loaderScreen: {
-    flex: 1, backgroundColor: CREAM,
-    justifyContent: 'center', alignItems: 'center', gap: 12,
+    flex: 1,
+    backgroundColor: CREAM,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
   },
   loaderText: {
-    fontFamily: 'BJCree-Regular', fontSize: 13,
-    color: 'rgba(4,30,75,0.50)', letterSpacing: 0.3,
+    fontFamily: 'BJCree-Regular',
+    fontSize: 13,
+    color: 'rgba(4,30,75,0.50)',
+    letterSpacing: 0.3,
   },
   emptyText: {
-    fontFamily: 'BJCree-Regular', fontSize: 15,
-    color: 'rgba(4,30,75,0.45)', letterSpacing: 0.2,
+    fontFamily: 'BJCree-Regular',
+    fontSize: 15,
+    color: 'rgba(4,30,75,0.45)',
+    letterSpacing: 0.2,
   },
 
   /* ── Hero Image ── */
@@ -401,14 +454,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(4,30,75,0.22)',
   },
   badge: {
-    position: 'absolute', top: 18, right: 18,
+    position: 'absolute',
+    top: 18,
+    right: 18,
     backgroundColor: 'rgba(4,30,75,0.60)',
-    paddingHorizontal: 13, paddingVertical: 5,
-    borderRadius: 20, borderWidth: 1, borderColor: CREAM,
+    paddingHorizontal: 13,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: CREAM,
   },
   badgeText: {
-    fontFamily: 'BJCree-Regular', color: CREAM,
-    fontSize: 9, letterSpacing: 2.8,
+    fontFamily: 'BJCree-Regular',
+    color: CREAM,
+    fontSize: 9,
+    letterSpacing: 2.8,
   },
 
   /* ── Content ── */
@@ -418,45 +478,77 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 18 },
   headerAccent: { width: 4, height: 56, backgroundColor: NAV, borderRadius: 2 },
   eyebrow: {
-    fontFamily: 'BJCree-Regular', fontSize: 10,
-    color: 'rgba(4,30,75,0.45)', letterSpacing: 3, marginBottom: 5,
+    fontFamily: 'BJCree-Regular',
+    fontSize: 10,
+    color: 'rgba(4,30,75,0.45)',
+    letterSpacing: 3,
+    marginBottom: 5,
   },
   name: {
-    fontFamily: 'BJCree-Bold', fontSize: 28,
-    color: NAV, letterSpacing: -0.6, lineHeight: 34,
+    fontFamily: 'BJCree-Bold',
+    fontSize: 28,
+    color: NAV,
+    letterSpacing: -0.6,
+    lineHeight: 34,
   },
   divider: { height: 1, backgroundColor: 'rgba(4,30,75,0.10)', marginBottom: 24 },
 
   /* ── Cards ── */
   card: {
-    backgroundColor: CREAM, borderRadius: 20, padding: 20, marginBottom: 16,
-    borderWidth: 1, borderColor: 'rgba(4,30,75,0.10)',
-    shadowColor: NAV, shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.10, shadowRadius: 18, elevation: 6,
+    backgroundColor: CREAM,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(4,30,75,0.10)',
+    shadowColor: NAV,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    elevation: 6,
   },
-  cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
   accentLine: { width: 4, height: 20, backgroundColor: NAV, borderRadius: 2 },
   cardLabel: {
-    fontFamily: 'BJCree-Bold', fontSize: 12,
-    color: 'rgba(4,30,75,0.55)', letterSpacing: 1.5,
+    fontFamily: 'BJCree-Bold',
+    fontSize: 12,
+    color: 'rgba(4,30,75,0.55)',
+    letterSpacing: 1.5,
   },
   description: {
-    fontFamily: 'BJCree-Regular', fontSize: 15,
-    color: 'rgba(4,30,75,0.72)', lineHeight: 24, letterSpacing: 0.1,
+    fontFamily: 'BJCree-Regular',
+    fontSize: 15,
+    color: 'rgba(4,30,75,0.72)',
+    lineHeight: 24,
+    letterSpacing: 0.1,
   },
 
   /* ── Price Card ── */
   priceCard: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: NAV, borderRadius: 20,
-    paddingHorizontal: 22, paddingVertical: 20, marginBottom: 16,
-    shadowColor: NAV, shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.30, shadowRadius: 16, elevation: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: NAV,
+    borderRadius: 20,
+    paddingHorizontal: 22,
+    paddingVertical: 20,
+    marginBottom: 16,
+    shadowColor: NAV,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 10,
   },
   priceLeft: { gap: 4 },
   priceEyebrow: {
-    fontFamily: 'BJCree-Regular', fontSize: 9,
-    color: 'rgba(255,254,253,0.65)', letterSpacing: 2.5,
+    fontFamily: 'BJCree-Regular',
+    fontSize: 9,
+    color:'rgba(255,254,253,0.65)', letterSpacing: 2.5,
   },
   priceValue: {
     fontFamily: 'BJCree-Bold', fontSize: 26, color: CREAM, letterSpacing: -0.4,
