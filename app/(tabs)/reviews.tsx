@@ -22,6 +22,7 @@ import {
 import { MaterialCommunityIcons, Fontisto } from '@expo/vector-icons';
 import AddReview from '../../components/AddReviews';
 import useAuthentication from '../hooks/useAuthentication';
+import Rating from '../../components/Rating';
 
 type CommentType = {
   email: string;
@@ -146,6 +147,10 @@ const Reviews = () => {
     >
       <View style={styles.container}>
 
+         <View>
+          <Rating/>
+        </View>
+
         {/* ── Header ── */}
         <View style={styles.header}>
           <View style={styles.headerAccent} />
@@ -154,7 +159,9 @@ const Reviews = () => {
             <Text style={styles.headerTitle}>Reviews</Text>
           </View>
         </View>
+        <View style={styles.divider} />
 
+       
         <View style={styles.divider} />
 
          {!user ? (

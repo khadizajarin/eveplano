@@ -227,9 +227,6 @@ const BookingCard: React.FC<{
   );
 };
 
-// ════════════════════════════════
-// Main screen
-// ════════════════════════════════
 const Bookings: React.FC = () => {
   const { user } = useAuthentication();
 

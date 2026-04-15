@@ -64,13 +64,12 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          href: user ? undefined : null, // 🔥 hide if not logged in
+          href: user ? undefined : null, // hide if not logged in
           tabBarIcon: ({ color }) => (
             <Ionicons name="person" size={24} color={color} />
           ),
         }}
       />
-
     </Tabs>
   );
 }

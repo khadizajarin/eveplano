@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",            
+      "backgroundColor": "#041e4b"
+    },
     "scheme": "eveplano",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -37,12 +42,14 @@
     },
     "plugins": [
       "expo-router",
-      "expo-location",
+        ["expo-location", {
+        "locationWhenInUsePermission": "Allow EvePlano to use your location."
+      }],
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 220,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
