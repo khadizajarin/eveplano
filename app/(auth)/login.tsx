@@ -8,7 +8,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TextInputProps,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import useAuth from '../hooks/useAuthentication';
 
@@ -20,6 +22,7 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // 👈 toggle state
 
   const handleLogin = async () => {
     try {
@@ -40,7 +43,6 @@ export default function Login() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-
         {/* ── Top Branding Block ── */}
         <View style={styles.brandBlock}>
           <View style={styles.logoBox}>
@@ -52,7 +54,6 @@ export default function Login() {
 
         {/* ── Card ── */}
         <View style={styles.card}>
-
           {/* Header accent */}
           <View style={styles.cardHeaderRow}>
             <View style={styles.accentLine} />
@@ -76,14 +77,28 @@ export default function Login() {
           {/* Password */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor="rgba(4,30,75,0.30)"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            <View style={styles.passwordInputContainer}>
+              <TextInput
+                style={[styles.input, styles.passwordInput]}
+                placeholder="Enter your password"
+                placeholderTextColor="rgba(4,30,75,0.30)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword} // 👈 toggle
+              />
+              {/* Eye icon toggle */}
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+                activeOpacity={0.75}
+              >
+                <MaterialCommunityIcons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="rgba(4,30,75,0.45)"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Login Button */}
@@ -111,9 +126,7 @@ export default function Login() {
           >
             <Text style={styles.outlineButtonText}>Create an Account</Text>
           </TouchableOpacity>
-
         </View>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -145,7 +158,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     shadowColor: NAV,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.30,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
   },
@@ -159,7 +172,6 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontFamily: 'BJCree-Regular',
     fontSize: 10,
-    // fontWeight: '700',
     color: 'rgba(4,30,75,0.45)',
     letterSpacing: 3,
     marginBottom: 6,
@@ -167,7 +179,6 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontFamily: 'BJCree-Bold',
     fontSize: 32,
-    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.8,
     lineHeight: 38,
@@ -201,7 +212,6 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontFamily: 'BJCree-Bold',
     fontSize: 20,
-    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.4,
   },
@@ -213,7 +223,6 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'BJCree-Regular',
     fontSize: 11,
-    // fontWeight: '700',
     color: 'rgba(4,30,75,0.55)',
     letterSpacing: 1.5,
     marginBottom: 8,
@@ -229,6 +238,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: NAV,
   },
+  passwordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    padding: 6,
+  },
 
   /* ── Primary Button ── */
   button: {
@@ -242,14 +263,13 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     shadowColor: NAV,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.30,
+    shadowOpacity: 0.3,
     shadowRadius: 14,
     elevation: 8,
   },
   buttonText: {
     fontFamily: 'BJCree-Bold',
     color: CREAM,
-    // fontWeight: '700',
     fontSize: 14,
     letterSpacing: 0.8,
   },
@@ -275,7 +295,6 @@ const styles = StyleSheet.create({
   dividerText: {
     fontFamily: 'BJCree-Regular',
     fontSize: 11,
-    // fontWeight: '700',
     color: 'rgba(4,30,75,0.35)',
     letterSpacing: 1.5,
   },
@@ -292,7 +311,6 @@ const styles = StyleSheet.create({
   outlineButtonText: {
     fontFamily: 'BJCree-Bold',
     color: NAV,
-    // fontWeight: '700',
     fontSize: 13,
     letterSpacing: 0.5,
   },

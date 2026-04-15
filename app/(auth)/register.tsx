@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,19 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { db } from '../hooks/firebase.config';
-import { doc, setDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  setDoc,
+} from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 
 const NAV   = '#041e4b';
@@ -21,31 +30,86 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // 👇 password show/hide state
+  const [showPassword, setShowPassword] = useState(false);
+
+  // 👇 email already registered check
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+
+  // ── Email exists check in Firestore ──
+  useEffect(() => {
+    if (!email || !email.includes('@')) {
+      setEmailError(null);
+      return;
+    }
+
+    const id = setTimeout(async () => {
+      setCheckingEmail(true);
+      try {
+        const q = query(collection(db, 'users'), where('email', '==', email));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          setEmailError('This email is already registered');
+        } else {
+          setEmailError(null);
+        }
+      } catch (err) {
+        console.error(err);
+        setEmailError('Error checking email');
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 500);
+    return () => clearTimeout(id);
+  }, [email]);
+
+  // 🔥 এই অংশটা তোমার মতোই রাখা হয়েছে (শুধু error guard যোগ)
   const handleRegister = async () => {
-  try {
-    const auth = getAuth();
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    if (!email || !password) {
+      alert('Please fill both email and password');
+      return;
+    }
+    if (emailError) {
+      alert('Please fix the email error first');
+      return;
+    }
 
-    const user = userCredential.user;
+    try {
+      const auth = getAuth();
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    // ✅ Save to Firestore
-    await setDoc(doc(db, 'users', user.uid), {
-      email: user.email,
-      role: 'user',
-      displayName:'',
-      phonenumber:'',
-      photoURL:'',
-      City:'',
-      Country:'',
-      Devision:'',
-      createdAt: new Date(),
-    });
+      // ✅ Save to Firestore (তোমার মতোই)
+      await setDoc(
+        doc(db, 'users', user.uid),
+        {
+          email: user.email,
+          role: 'user',
+          displayName: '',
+          phonenumber: '',
+          photoURL: '',
+          City: '',
+          Country: '',
+          Devision: '',
+          createdAt: new Date(),
+        },
+        { merge: true }
+      );
 
-    router.replace('/(tabs)');
-  } catch (e) {
-    console.log(e);
-  }
-};
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      console.log(e);
+
+      let msg = 'Registration failed.';
+      if (e.code === 'auth/email-already-in-use') {
+        msg = 'Email is already registered.';
+      } else if (e.code === 'auth/invalid-email') {
+        msg = 'Email format is invalid.';
+      }
+      alert(msg);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -57,7 +121,6 @@ export default function Register() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-
         {/* ── Top Branding Block ── */}
         <View style={styles.brandBlock}>
           <View style={styles.logoBox}>
@@ -69,48 +132,78 @@ export default function Register() {
 
         {/* ── Card ── */}
         <View style={styles.card}>
-
           {/* Header accent */}
           <View style={styles.cardHeaderRow}>
             <View style={styles.accentLine} />
             <Text style={styles.cardTitle}>Register</Text>
           </View>
 
-          {/* Email */}
+          {/* Email (with real‑time check) */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="you@example.com"
-              placeholderTextColor="rgba(4,30,75,0.30)"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+            <View style={styles.emailInputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="you@example.com"
+                placeholderTextColor="rgba(4,30,75,0.30)"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              {checkingEmail && (
+                <ActivityIndicator
+                  size="small"
+                  color="rgba(4,30,75,0.45)"
+                  style={styles.spinner}
+                />
+              )}
+            </View>
+            {emailError && <Text style={styles.errorText}>{emailError}</Text>}
           </View>
 
-          {/* Password */}
+          {/* Password (with show/hide) */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Create a password"
-              placeholderTextColor="rgba(4,30,75,0.30)"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            <View style={styles.passwordInputContainer}>
+              <TextInput
+                style={[styles.input, styles.passwordInput]}
+                placeholder="Create a password"
+                placeholderTextColor="rgba(4,30,75,0.30)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword} // 👈 show/hide
+              />
+              {/* Eye icon */}
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+                activeOpacity={0.75}
+              >
+                <MaterialCommunityIcons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="rgba(4,30,75,0.45)"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Register Button */}
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, (emailError || checkingEmail) && { opacity: 0.6 }]}
             onPress={handleRegister}
             activeOpacity={0.82}
+            disabled={!!emailError || checkingEmail}
           >
-            <Text style={styles.buttonText}>Create Account</Text>
-            <Text style={styles.buttonArrow}>→</Text>
+            {checkingEmail ? (
+              <ActivityIndicator size="small" color={CREAM} />
+            ) : (
+              <>
+                <Text style={styles.buttonText}>Create Account</Text>
+                <Text style={styles.buttonArrow}>→</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           {/* Divider */}
@@ -128,13 +221,14 @@ export default function Register() {
           >
             <Text style={styles.outlineButtonText}>Already have an account? Login</Text>
           </TouchableOpacity>
-
         </View>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
+// 👇 তোমার মতোই styles থাকবে, শুধু নিচের কয়েকটা অতিরিক্ত স্টাইল যোগ করো:
+// (তোমার আগের StyleSheet তে না থাকলে copy করো সেগুলো)
 
 const styles = StyleSheet.create({
   screen: {
@@ -162,7 +256,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     shadowColor: NAV,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.30,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
   },
@@ -176,7 +270,6 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontFamily: 'BJCree-Regular',
     fontSize: 10,
-    // fontWeight: '700',
     color: 'rgba(4,30,75,0.45)',
     letterSpacing: 3,
     marginBottom: 6,
@@ -184,7 +277,6 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontFamily: 'BJCree-Bold',
     fontSize: 32,
-    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.8,
     lineHeight: 38,
@@ -218,7 +310,6 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontFamily: 'BJCree-Bold',
     fontSize: 20,
-    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.4,
   },
@@ -230,7 +321,6 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'BJCree-Regular',
     fontSize: 11,
-    // fontWeight: '700',
     color: 'rgba(4,30,75,0.55)',
     letterSpacing: 1.5,
     marginBottom: 8,
@@ -246,6 +336,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: NAV,
   },
+  emailInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  spinner: {
+    marginLeft: 10,
+  },
+
+  passwordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    padding: 6,
+  },
+
+  errorText: {
+    fontFamily: 'BJCree-Regular',
+    fontSize: 12,
+    color: '#e74c3c',
+    marginTop: 6,
+  },
 
   /* ── Primary Button ── */
   button: {
@@ -259,14 +376,13 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     shadowColor: NAV,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.30,
+    shadowOpacity: 0.3,
     shadowRadius: 14,
     elevation: 8,
   },
   buttonText: {
     fontFamily: 'BJCree-Bold',
     color: CREAM,
-    // fontWeight: '700',
     fontSize: 14,
     letterSpacing: 0.8,
   },
@@ -292,7 +408,6 @@ const styles = StyleSheet.create({
   dividerText: {
     fontFamily: 'BJCree-Regular',
     fontSize: 11,
-    // fontWeight: '700',
     color: 'rgba(4,30,75,0.35)',
     letterSpacing: 1.5,
   },
@@ -309,7 +424,6 @@ const styles = StyleSheet.create({
   outlineButtonText: {
     fontFamily: 'BJCree-Bold',
     color: NAV,
-    // fontWeight: '700',
     fontSize: 13,
     letterSpacing: 0.5,
   },
