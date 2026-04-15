@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Redirect } from 'expo-router';
 import useAuthentication from '../app/hooks/useAuthentication';
 import app, { db } from '../app/hooks/firebase.config';
 
@@ -23,14 +22,14 @@ const AddReview = () => {
   const [reviewText, setReviewText] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // ✅ PRIVATE ROUTE GUARD
+  // PRIVATE ROUTE GUARD
   if (loading)
     return (
       <View style={styles.loaderScreen}>
         <ActivityIndicator size="small" color={NAV} />
       </View>
     );
-  // if (!user) return <Redirect href="/login" />;
+
 
   const handleAddReview = async () => {
     if (!reviewText.trim()) {
@@ -143,8 +142,8 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   eyebrow: {
+    fontFamily: 'BJCree-Bold',
     fontSize: 9,
-    fontWeight: '700',
     color: 'rgba(4,30,75,0.45)',
     letterSpacing: 3,
     marginBottom: 4,
@@ -152,7 +151,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'BJCree-Bold',
     fontSize: 18,
-    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.4,
     lineHeight: 22,

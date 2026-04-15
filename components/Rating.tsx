@@ -17,7 +17,6 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
-  getDoc,
 } from 'firebase/firestore';
 import useAuthentication from '../app/hooks/useAuthentication';
 import app, { db } from '../app/hooks/firebase.config';
@@ -26,19 +25,27 @@ import { router } from 'expo-router';
 const NAV   = '#041e4b';
 const CREAM = '#fffefd';
 
-type RatingProps = {
-  navigation: any; // <-- navigation prop for redirect
-};
-
-const Rating: React.FC<RatingProps> = ({ navigation }) => {
-  const [rating, setRating] = useState<number>(0); // 0.5, 1.5, 2.5, ..., 5.0
+const Rating: React.FC = () => {
+  const [rating, setRating] = useState<number>(0); 
   const [submitting, setSubmitting] = useState(false);
   const [userRatingDocId, setUserRatingDocId] = useState<string | null>(null);
-
   const [avgRating, setAvgRating] = useState<number | null>(null);
   const [totalRatings, setTotalRatings] = useState<number>(0);
+  const [user, setUser] = useState<any>(null); 
 
-  const { user } = useAuthentication(app);
+  const { user: authUser, loading } = useAuthentication(app); 
+
+  useEffect(() => {
+    if (!loading) {
+      fetchStats();
+      if (authUser) {
+        fetchUserRating(authUser);
+        setUser(authUser);
+      } else {
+        setUser(null);
+      }
+    }
+  }, [authUser, loading]);
 
   const handleSetRating = (value: number) => {
     setRating(value);
@@ -73,9 +80,7 @@ const Rating: React.FC<RatingProps> = ({ navigation }) => {
     }
   };
 
-  const fetchUserRating = async () => {
-    if (!user) return;
-
+  const fetchUserRating = async (user: any) => {
     try {
       const q = query(
         collection(db, 'rating'),
@@ -96,14 +101,9 @@ const Rating: React.FC<RatingProps> = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    fetchStats();
-    if (user) fetchUserRating();
-  }, [user]);
-
   const handleSubmit = async () => {
     if (!user) {
-      navigation.navigate('Login'); // <-- login route name
+      router.push('/login'); // login screen redirect
       return;
     }
 
@@ -131,7 +131,7 @@ const Rating: React.FC<RatingProps> = ({ navigation }) => {
       }
 
       ToastAndroid.show('Thanks for your rating!', ToastAndroid.SHORT);
-      fetchStats();
+      fetchStats(); // আপনার UI আপডেট করুন
     } catch (err) {
       console.error('rating submit error:', err);
       ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
@@ -141,7 +141,7 @@ const Rating: React.FC<RatingProps> = ({ navigation }) => {
   };
 
   const handleLoginPress = () => {
-    router.push('/login') // change to your actual login route
+    router.push('/login'); // login screen redirect
   };
 
   const renderStars = () => {
@@ -212,6 +212,25 @@ const Rating: React.FC<RatingProps> = ({ navigation }) => {
           </Text>
         </View>
 
+        {/* Login hint when logged out */}
+        {!user ? (
+          <TouchableOpacity
+            style={styles.loginHint}
+            onPress={handleLoginPress}
+          >
+            <Text
+              style={{
+                textAlign: 'center',
+                color: 'rgba(4,30,75,0.45)',
+                fontFamily: 'BJCree-Regular',
+                textDecorationLine: 'underline',
+              }}
+            >
+              Please login to submit rating
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+
         {/* Rating Card */}
         <View style={styles.card}>
           <Text style={styles.quoteMark}>&quot;</Text>
@@ -253,7 +272,7 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
   },
   container: {
-    paddingTop: 56,
+    // paddingTop: 56,
   },
 
   header: {
@@ -361,8 +380,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   submitText: {
-    fontFamily: 'BJCree-Bold',
     color: CREAM,
+    fontFamily: 'BJCree-Bold',
     fontSize: 14,
     letterSpacing: 0.4,
   },

@@ -147,9 +147,13 @@ const Reviews = () => {
     >
       <View style={styles.container}>
 
+        
+
          <View>
           <Rating/>
         </View>
+
+        <View style={styles.divider} />
 
         {/* ── Header ── */}
         <View style={styles.header}>
@@ -159,7 +163,7 @@ const Reviews = () => {
             <Text style={styles.headerTitle}>Reviews</Text>
           </View>
         </View>
-        <View style={styles.divider} />
+        
 
        
         <View style={styles.divider} />
@@ -317,9 +321,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loaderLabel: {
+    fontFamily: 'BJCree-Bold',
     fontSize: 13,
     color: 'rgba(4,30,75,0.50)',
-    fontWeight: '500',
     letterSpacing: 0.3,
   },
 
@@ -339,7 +343,6 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontFamily: 'BJCree-Regular',
     fontSize: 10,
-    // fontWeight: '700',
     color: 'rgba(4,30,75,0.45)',
     letterSpacing: 3,
     marginBottom: 5,
@@ -347,7 +350,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontFamily: 'BJCree-Bold',
-    // fontWeight: '800',
     color: NAV,
     letterSpacing: -0.6,
     lineHeight: 34,
@@ -433,7 +435,6 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 13,
     fontFamily: 'BJCree-Regular',
-    // fontWeight: '700',
     color: NAV,
     letterSpacing: 0.2,
   },
@@ -513,7 +514,7 @@ const styles = StyleSheet.create({
   },
   postBtnText: {
     color: CREAM,
-    fontWeight: '700',
+    fontFamily: 'BJCree-Bold',
     fontSize: 13,
     letterSpacing: 0.5,
   },
