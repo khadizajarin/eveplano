@@ -1,50 +1,105 @@
-# Welcome to your Expo app 👋
+# Event Booking & Event Management App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A full event booking and service management mobile app built with **React Native (Expo)** and **Firebase**.  
+This app lets users view event services, book a service, and receive instant confirmation, while admins manage bookings through a simple panel.
 
-## Get started
+---
 
-1. Install dependencies
+## 📌 Features
 
+- Browse event services with clean UI and hero images.  
+- Book a service by filling a form (guests, venue, phone, special requirements).  
+- Real‑time booking stored in **Firebase Firestore** (`bookings` collection).  
+- `progress: "pending"` status for new bookings; admin panel approves/rejects.  
+- Responsive modal form with keyboard behavior and validation.  
+- Success confirmation popup after booking.  
+- User‑based booking flow:  
+  - If user is logged in → opens booking modal.  
+  - If user is logged out → redirects to `/login` route.
+
+---
+
+## 📱 Screens
+
+1. **Login & Register Screens**
+   - Standard email‑based login and registration using Firebase Auth.  
+   - After successful login, user is redirected to the main event listing / service list.  
+   - Only logged‑in users can:  
+     - Submit a booking.  
+     - Submit or update a rating.
+
+2. **Event / Service Listing Screen**
+   - Grid or list of event services with thumbnails, titles, and starting prices.  
+   - Each item has a “View Details” button that opens the Service Details screen.
+
+3. **Service Details Screen**
+   - Hero image, service name, price, and detailed description.  
+   - “Book this Service” button:  
+     - If user is logged in → opens a booking modal.  
+     - If user is not logged in → redirects to the `/login` route.  
+   - Optional **Rating card** that shows average rating and total counts (only visible if at least one rating exists).
+
+4. **Booking Modal**
+   - Auto‑filled service details (name, price, booked‑by).  
+   - Form fields:  
+     - Number of guests.  
+     - Event location.  
+     - Phone number.  
+     - Special requirements.  
+   - Status info section: booking starts as `Pending` — representative will contact you.  
+   - On submit: data is sent to Firestore `bookings` collection with status `pending` and real‑time confirmation.
+
+5. **Success / Confirmation Popup**
+   - Displays after a successful booking.  
+   - Text: “Booking received — our representative will contact you shortly.”  
+   - Simple “Done” button to close the popup.
+
+6. **Rating / Review Screen (if user is logged in)**
+   - Users can rate services on a 5‑star scale (including half‑stars).  
+   - Each user can submit **only one rating**, which can be updated later.  
+   - If the user is not logged in, the rating form is hidden and the app shows a “Login to rate” prompt that redirects to the `/login` route.
+
+---
+
+## 📦 Usage
+
+1. Clone this repo:
    ```bash
+   git clone https://github.com/khadizajarin/eveplano
+   cd your-event-booking-app
+   ```
+
+2. Install dependencies:
+   ```bash
+   yarn install
+   # or
    npm install
    ```
 
-2. Start the app
+3. Add your Firebase config in `app/hooks/firebase.config.ts`.
 
+4. Run the app:
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 📲 APK / Demo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Download APK or view demo:
 
-## Get a fresh project
+🔗 **APK file / Demo link**:  
+👉 [https://your-demo-link-or-apk-url.com](https://your-demo-link-or-apk-url.com)
 
-When you're ready, run:
 
-```bash
-npm run reset-project
-```
+---
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🎯 Why This Project?
 
-## Learn more
+This app demonstrates a **production‑like event booking flow** covering:
+- Service listing → service detail → booking → confirmation.  
+- Authentication‑aware routing (`/login` redirect if not logged in).  
+- Clean UI, reusable components, and real‑time Firestore data.
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Perfect for portfolio or as a starting point for a full event management system.

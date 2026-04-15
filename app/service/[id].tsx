@@ -13,7 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { db } from '../hooks/firebase.config';
 import {
   collection,
@@ -168,7 +168,13 @@ const ServiceDetails = () => {
           <TouchableOpacity
             style={styles.bookButton}
             activeOpacity={0.82}
-            onPress={() => setShowBooking(true)}
+            onPress={() => {
+              if (!user) {
+                router.push('/login'); 
+              } else {
+                setShowBooking(true); 
+              }
+            }}
           >
             <Text style={styles.bookButtonText}>Book this Service</Text>
             <Text style={styles.bookButtonArrow}>→</Text>
