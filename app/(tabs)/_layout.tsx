@@ -27,7 +27,7 @@ export default function TabLayout() {
   if (!loaded && !error) return null;
 
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: '#041e4b', tabBarInactiveTintColor: '#9aa3b9',}}>
       
       <Tabs.Screen
         name="index"
@@ -59,12 +59,11 @@ export default function TabLayout() {
         }}
       />
 
-      {/* ✅ Always declare screen */}
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          href: user ? undefined : null, // hide if not logged in
+          href: user ? undefined : null,
           tabBarIcon: ({ color }) => (
             <Ionicons name="person" size={24} color={color} />
           ),

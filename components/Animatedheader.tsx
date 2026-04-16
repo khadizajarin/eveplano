@@ -1,9 +1,17 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View, Easing } from 'react-native';
+import {
+  Animated,
+  StyleSheet,
+  View,
+  Easing,
+} from 'react-native';
 
+const NAV   = '#041e4b';
 const CREAM = '#fffefd';
+const BG    = '#03183a'; // muted navy
 
-// ── Individual floating shape ──
+
+// ── Floating shape type ──
 type ShapeProps = {
   size: number;
   shape: 'circle' | 'square' | 'ring';
@@ -14,6 +22,7 @@ type ShapeProps = {
   opacity: number;
 };
 
+
 const FloatingShape: React.FC<ShapeProps> = ({
   size, shape, x, y, duration, delay, opacity,
 }) => {
@@ -21,12 +30,13 @@ const FloatingShape: React.FC<ShapeProps> = ({
   const rotate     = useRef(new Animated.Value(0)).current;
   const scale      = useRef(new Animated.Value(1)).current;
 
+
   useEffect(() => {
-    // Float up and down
+    // stronger vertical float
     Animated.loop(
       Animated.sequence([
         Animated.timing(translateY, {
-          toValue: -14,
+          toValue: -26,
           duration,
           delay,
           easing: Easing.inOut(Easing.sin),
@@ -41,7 +51,8 @@ const FloatingShape: React.FC<ShapeProps> = ({
       ])
     ).start();
 
-    // Gentle rotation (squares only)
+
+    // gentle rotation — only squares
     if (shape === 'square') {
       Animated.loop(
         Animated.timing(rotate, {
@@ -54,20 +65,21 @@ const FloatingShape: React.FC<ShapeProps> = ({
       ).start();
     }
 
-    // Gentle pulse (rings only)
+
+    // stronger pulse — only rings
     if (shape === 'ring') {
       Animated.loop(
         Animated.sequence([
           Animated.timing(scale, {
-            toValue: 1.15,
-            duration: duration * 0.8,
+            toValue: 1.25,
+            duration: duration * 0.7,
             delay,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(scale, {
             toValue: 1,
-            duration: duration * 0.8,
+            duration: duration * 0.7,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
@@ -76,10 +88,12 @@ const FloatingShape: React.FC<ShapeProps> = ({
     }
   }, []);
 
+
   const rotateInterpolate = rotate.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
+
 
   const shapeStyle = [
     styles.shape,
@@ -97,8 +111,15 @@ const FloatingShape: React.FC<ShapeProps> = ({
         shape === 'ring' ? 'transparent' : CREAM,
       borderWidth:  shape === 'ring' ? 1.5 : 0,
       borderColor:  shape === 'ring' ? CREAM : 'transparent',
+      // shadow for depth
+      shadowColor: NAV,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 6,
     },
   ];
+
 
   return (
     <Animated.View
@@ -116,32 +137,37 @@ const FloatingShape: React.FC<ShapeProps> = ({
   );
 };
 
+
 // ── Main animated header ──
 const AnimatedHeader: React.FC = () => {
   const shapes: ShapeProps[] = [
-    // circles
-    { shape: 'circle', size: 8,  x: 30,  y: 30,  duration: 2800, delay: 0,    opacity: 0.18 },
-    { shape: 'circle', size: 5,  x: 80,  y: 80,  duration: 3200, delay: 400,  opacity: 0.12 },
-    { shape: 'circle', size: 10, x: 160, y: 20,  duration: 2600, delay: 200,  opacity: 0.15 },
-    { shape: 'circle', size: 6,  x: 240, y: 90,  duration: 3400, delay: 800,  opacity: 0.10 },
-    { shape: 'circle', size: 12, x: 300, y: 40,  duration: 3000, delay: 600,  opacity: 0.14 },
-    { shape: 'circle', size: 4,  x: 340, y: 130, duration: 2400, delay: 100,  opacity: 0.12 },
+    // circles — a bit more opacity
+    { shape: 'circle', size: 8,  x: 30,  y: 30,  duration: 2800, delay: 0,    opacity: 0.24 },
+    { shape: 'circle', size: 5,  x: 80,  y: 80,  duration: 3200, delay: 400,  opacity: 0.18 },
+    { shape: 'circle', size: 10, x: 160, y: 20,  duration: 2600, delay: 200,  opacity: 0.22 },
+    { shape: 'circle', size: 6,  x: 240, y: 90,  duration: 3400, delay: 800,  opacity: 0.16 },
+    { shape: 'circle', size: 12, x: 300, y: 40,  duration: 3000, delay: 600,  opacity: 0.20 },
+    { shape: 'circle', size: 4,  x: 340, y: 130, duration: 2400, delay: 100,  opacity: 0.18 },
+
 
     // squares (rotating)
-    { shape: 'square', size: 7,  x: 60,  y: 110, duration: 3600, delay: 300,  opacity: 0.10 },
-    { shape: 'square', size: 10, x: 190, y: 100, duration: 4000, delay: 700,  opacity: 0.08 },
-    { shape: 'square', size: 6,  x: 270, y: 60,  duration: 3200, delay: 500,  opacity: 0.12 },
-    { shape: 'square', size: 9,  x: 120, y: 50,  duration: 3800, delay: 200,  opacity: 0.09 },
+    { shape: 'square', size: 7,  x: 60,  y: 110, duration: 3600, delay: 300,  opacity: 0.16 },
+    { shape: 'square', size: 10, x: 190, y: 100, duration: 4000, delay: 700,  opacity: 0.14 },
+    { shape: 'square', size: 6,  x: 270, y: 60,  duration: 3200, delay: 500,  opacity: 0.18 },
+    { shape: 'square', size: 9,  x: 120, y: 50,  duration: 3800, delay: 200,  opacity: 0.15 },
+
 
     // rings (pulsing)
-    { shape: 'ring',   size: 20, x: 50,  y: 50,  duration: 3000, delay: 0,    opacity: 0.12 },
-    { shape: 'ring',   size: 28, x: 210, y: 55,  duration: 3600, delay: 400,  opacity: 0.10 },
-    { shape: 'ring',   size: 16, x: 310, y: 90,  duration: 2800, delay: 900,  opacity: 0.13 },
-    { shape: 'ring',   size: 22, x: 140, y: 120, duration: 4000, delay: 200,  opacity: 0.08 },
+    { shape: 'ring',   size: 20, x: 50,  y: 50,  duration: 3000, delay: 0,    opacity: 0.20 },
+    { shape: 'ring',   size: 28, x: 210, y: 55,  duration: 3600, delay: 400,  opacity: 0.16 },
+    { shape: 'ring',   size: 16, x: 310, y: 90,  duration: 2800, delay: 900,  opacity: 0.22 },
+    { shape: 'ring',   size: 22, x: 140, y: 120, duration: 4000, delay: 200,  opacity: 0.14 },
   ];
 
-  // Calendar icon lines — subtle event-management motif
+
+  // calendar icon motion — more pronounced
   const calendarAnim = useRef(new Animated.Value(0)).current;
+
 
   useEffect(() => {
     Animated.loop(
@@ -162,39 +188,39 @@ const AnimatedHeader: React.FC = () => {
     ).start();
   }, []);
 
+
   const calY = calendarAnim.interpolate({
     inputRange:  [0, 1],
-    outputRange: [0, -10],
+    outputRange: [0, -14], // stronger bob
   });
   const calOpacity = calendarAnim.interpolate({
     inputRange:  [0, 0.5, 1],
-    outputRange: [0.12, 0.20, 0.12],
+    outputRange: [0.16, 0.24, 0.16],
   });
+
 
   return (
     <View style={styles.container}>
-      {/* Floating shapes */}
+      {/* Floating shapes — more visible */}
       {shapes.map((s, i) => (
         <FloatingShape key={i} {...s} />
       ))}
 
-      {/* Calendar motif — center */}
+
+      {/* Calendar motif — more prominent */}
       <Animated.View
         style={[
           styles.calendar,
           { transform: [{ translateY: calY }], opacity: calOpacity },
         ]}
       >
-        {/* outer box */}
-        <View style={styles.calBox}>
-          {/* top bar */}
-          <View style={styles.calTop} />
-          {/* grid dots */}
-          <View style={styles.calGrid}>
-            {[...Array(9)].map((_, i) => (
-              <View key={i} style={styles.calDot} />
-            ))}
-          </View>
+        {/* top bar of calendar */}
+        <View style={styles.calTop} />
+        {/* grid dots */}
+        <View style={styles.calGrid}>
+          {[...Array(9)].map((_, i) => (
+            <View key={i} style={styles.calDot} />
+          ))}
         </View>
         {/* binding hooks */}
         <View style={[styles.calHook, { left: 14 }]} />
@@ -204,38 +230,43 @@ const AnimatedHeader: React.FC = () => {
   );
 };
 
+
 export default AnimatedHeader;
+
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: '100%',
     overflow: 'hidden',
+    backgroundColor: BG,
   },
   shape: {
     position: 'absolute',
   },
+
 
   /* ── Calendar motif ── */
   calendar: {
     position: 'absolute',
     right: 28,
     bottom: 24,
-    width: 64,
-    height: 64,
-  },
-  calBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 10,
+    width: 70,
+    height: 70,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: CREAM,
-    overflow: 'hidden',
+    shadowColor: NAV,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.42,
+    shadowRadius: 12,
+    elevation: 12,
   },
   calTop: {
     height: 16,
     backgroundColor: CREAM,
-    opacity: 0.9,
+    opacity: 0.92,
   },
   calGrid: {
     flex: 1,
@@ -251,7 +282,7 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 2,
     backgroundColor: CREAM,
-    opacity: 0.7,
+    opacity: 0.78,
   },
   calHook: {
     position: 'absolute',

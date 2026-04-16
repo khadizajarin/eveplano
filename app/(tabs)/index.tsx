@@ -9,6 +9,7 @@ import Upcoming from '../../components/Upcoming';
 import AnimatedHeader from '../../components/Animatedheader';
 
 
+
 const NAV   = '#041e4b';
 const CREAM = '#fffefd';
 
@@ -85,6 +86,10 @@ export default function HomeScreen() {
       <View style={styles.upcomingWrapper}>
         <Upcoming />
       </View>
+
+      <TouchableOpacity   style={styles.primaryButton} onPress={() => router.push('/contact')}>
+        <Text style={styles.primaryButtonText}>Contact Us</Text>
+      </TouchableOpacity>
 
     </ParallaxScrollView>
   );
