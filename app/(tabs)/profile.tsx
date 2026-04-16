@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Modal,
   ScrollView,
@@ -28,7 +29,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../hooks/firebase.config";
 import useAuthentication from "../hooks/useAuthentication";
-import Bookings from "../admin/adminBookings";
 
 const NAV = "#041e4b";
 const CREAM = "#fffefd";
@@ -292,6 +292,11 @@ export default function Profile() {
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>PHONE</Text>
           <Text style={styles.infoValue}>{userData?.phoneNumber || "—"}</Text>
+        </View>
+        <View style={styles.infoDivider} />
+         <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>ROLE</Text>
+          <Text style={styles.infoValue}>{userData?.role || "—"}</Text>
         </View>
         <View style={styles.infoDivider} />
 
@@ -580,6 +585,8 @@ export default function Profile() {
           <Text style={styles.primaryButtonText}>Manage Bookings</Text>
         </TouchableOpacity>
       )}
+
+            
     </ScrollView>
   );
 }
@@ -909,4 +916,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: NAV,
   },
+  
 });

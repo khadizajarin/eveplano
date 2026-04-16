@@ -1,6 +1,6 @@
-// app/admin/users.tsx
 
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,34 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  Button,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc,
+  query,
+  where,
+} from 'firebase/firestore';
 import { db } from '../hooks/firebase.config';
-
-
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import useAuthentication from '../hooks/useAuthentication';
 
 const NAV = '#041e4b';
 const CREAM = '#fffefd';
+
+type UserType = {
+  email: string;
+  displayName?: string;
+  phoneNumber?: string;
+  photoURL?: string;
+  role?: string;
+  country?: any;
+  division?: any;
+  city?: any;
+};
 
 type User = {
   id: string;
@@ -28,8 +46,53 @@ type User = {
   blocked?: boolean;
 };
 
+const exportUsersCsv = async (users: User[]) => {
+  try {
+    // header লাইন
+    const header = 'email,displayName,role,blocked\n';
+
+    // প্রতিটি user এর row
+    const rows = users
+      .map((u) => {
+        const cols = [
+          u.email,
+          u.displayName || '',
+          u.role || '',
+          u.blocked ? 'true' : 'false',
+        ];
+        return (
+          cols
+            .map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`)
+            .join(',')
+        );
+      })
+      .join('\n');
+
+    const csvContent = header + rows;
+
+    const fileUri = FileSystem.cacheDirectory + 'users-report.csv';
+    await FileSystem.writeAsStringAsync(fileUri, csvContent, {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
+
+    const canShare = await Sharing.isAvailableAsync();
+    if (!canShare) {
+      Alert.alert('CSV Export', `CSV saved at: ${fileUri}`);
+      return;
+    }
+
+    await Sharing.shareAsync(fileUri, {
+      mimeType: 'text/csv',
+      dialogTitle: 'Share users CSV',
+    });
+  } catch (err) {
+    console.log(err);
+    Alert.alert('CSV Export', 'Failed to export CSV.');
+  }
+};
+
 export default function AdminUsers() {
-  const { user: userParam } = useLocalSearchParams(); 
+  const { user, auth } = useAuthentication();
   const [users, setUsers] = React.useState<User[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -66,7 +129,7 @@ export default function AdminUsers() {
     try {
       await updateDoc(doc(db, 'users', id), { role: newRole });
       setUsers((u) =>
-        u.map((user) => (user.id === id ? { ...user, role: newRole } : user))
+        u.map((user) => (user.id === id ? { ...user, role: newRole } : user)),
       );
       Alert.alert('Success', `Role changed to ${newRole}`);
     } catch (err) {
@@ -80,7 +143,7 @@ export default function AdminUsers() {
     try {
       await updateDoc(doc(db, 'users', id), { blocked: newBlocked });
       setUsers((u) =>
-        u.map((user) => (user.id === id ? { ...user, blocked: newBlocked } : user))
+        u.map((user) => (user.id === id ? { ...user, blocked: newBlocked } : user)),
       );
     } catch (err) {
       Alert.alert('Error', 'Failed to toggle block status.');
@@ -98,7 +161,7 @@ export default function AdminUsers() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await updateDoc(doc(db, 'users', id), { role: 'deleted' }); // soft delete
+              await updateDoc(doc(db, 'users', id), { role: 'deleted' });
               setUsers((u) => u.filter((user) => user.id !== id));
               Alert.alert('Success', 'User marked as deleted');
             } catch (err) {
@@ -106,7 +169,7 @@ export default function AdminUsers() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -129,6 +192,23 @@ export default function AdminUsers() {
         </View>
       </View>
       <View style={styles.divider} />
+
+      {/* CSV Export */}
+      {user && user.email && (
+        <View style={styles.adminCSVSection}>
+          <Text style={styles.adminCSVLabel}>Admin: CSV Export</Text>
+          <Text style={styles.adminCSVText}>
+            Download or share the user data CSV file for reporting.
+          </Text>
+          <TouchableOpacity
+            style={styles.adminCSVButton}
+            onPress={() => exportUsersCsv(users)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.adminCSVButtonText}>Download Users CSV</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <FlatList
         data={users}
@@ -208,7 +288,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: CREAM,
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 60,
     paddingBottom: 48,
   },
   screenContainer: {
@@ -290,9 +370,6 @@ const styles = StyleSheet.create({
   adminBadge: {
     color: '#ff6b35',
   },
-//   userBadge: {
-//     color: 'rgba(4,30,75,0.50)',
-//   },
   deletedBadge: {
     color: '#e74c3c',
   },
@@ -351,6 +428,48 @@ const styles = StyleSheet.create({
     fontFamily: 'BJCree-Bold',
     fontSize: 14,
     color: NAV,
+    letterSpacing: 0.8,
+  },
+
+  adminCSVSection: {
+    backgroundColor: CREAM,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(4,30,75,0.12)',
+    shadowColor: NAV,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  adminCSVLabel: {
+    fontFamily: 'BJCree-Bold',
+    fontSize: 18,
+    color: NAV,
+    marginBottom: 8,
+  },
+  adminCSVText: {
+    fontFamily: 'BJCree-Regular',
+    fontSize: 13,
+    color: 'rgba(4,30,75,0.62)',
+    marginBottom: 16,
+  },
+  adminCSVButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: NAV,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 50,
+  },
+  adminCSVButtonText: {
+    fontFamily: 'BJCree-Bold',
+    fontSize: 15,
+    color: CREAM,
     letterSpacing: 0.8,
   },
 });
