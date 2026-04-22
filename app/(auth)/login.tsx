@@ -8,13 +8,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TextInputProps,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import useAuth from '../hooks/useAuthentication';
 
-const NAV   = '#041e4b';
+const NAV = '#041e4b';
 const CREAM = '#fffefd';
 
 export default function Login() {
@@ -22,14 +21,55 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // 👈 toggle state
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [errors, setErrors] = useState({ email: '', password: '' });
+
+  const [authError, setAuthError] = useState('');
+
+  const validate = () => {
+    const newErrors = { email: '', password: '' };
+    let isValid = true;
+
+    if (!email.trim()) {
+      newErrors.email = 'Email is required.';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Email is not valid.';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleLogin = async () => {
+    setAuthError(''); 
+
+    if (!validate()) return;
+
     try {
       await login(email, password);
       router.replace('/(tabs)');
     } catch (e) {
       console.log(e);
+
+    
+      let message = 'Login failed. Please try again.';
+
+      const error = e as { code: string };
+
+      if (error.code === 'auth/invalid-credential') {
+        message = 'Invalid email or password.';
+      } else if (error.code === 'auth/user-not-found') {
+        message = 'No account found with this email.';
+      } else if (error.code === 'auth/wrong-password') {
+        message = 'Incorrect password.';
+      } else if (error.code === 'auth/too-many-requests') {
+        message = 'Too many attempts. Try again later.';
+      }
+
+      setAuthError(message);
     }
   };
 
@@ -43,7 +83,6 @@ export default function Login() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Top Branding Block ── */}
         <View style={styles.brandBlock}>
           <View style={styles.logoBox}>
             <View style={styles.logoDot} />
@@ -52,15 +91,17 @@ export default function Login() {
           <Text style={styles.brandTitle}>Sign In to{'\n'}Your Account</Text>
         </View>
 
-        {/* ── Card ── */}
         <View style={styles.card}>
-          {/* Header accent */}
           <View style={styles.cardHeaderRow}>
             <View style={styles.accentLine} />
             <Text style={styles.cardTitle}>Login</Text>
           </View>
 
-          {/* Email */}
+          {/* 🔴 GLOBAL ERROR (backend) */}
+          {authError ? (
+            <Text style={styles.authError}>{authError}</Text>
+          ) : null}
+
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Email Address</Text>
             <TextInput
@@ -72,9 +113,11 @@ export default function Login() {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            {errors.email ? (
+              <Text style={styles.errorMessage}>{errors.email}</Text>
+            ) : null}
           </View>
 
-          {/* Password */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.passwordInputContainer}>
@@ -84,9 +127,8 @@ export default function Login() {
                 placeholderTextColor="rgba(4,30,75,0.30)"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry={!showPassword} // 👈 toggle
+                secureTextEntry={!showPassword}
               />
-              {/* Eye icon toggle */}
               <TouchableOpacity
                 style={styles.eyeIcon}
                 onPress={() => setShowPassword(!showPassword)}
@@ -99,9 +141,11 @@ export default function Login() {
                 />
               </TouchableOpacity>
             </View>
+            {errors.password ? (
+              <Text style={styles.errorMessage}>{errors.password}</Text>
+            ) : null}
           </View>
 
-          {/* Login Button */}
           <TouchableOpacity
             style={styles.button}
             onPress={handleLogin}
@@ -111,14 +155,12 @@ export default function Login() {
             <Text style={styles.buttonArrow}>→</Text>
           </TouchableOpacity>
 
-          {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>OR</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Register Link */}
           <TouchableOpacity
             style={styles.outlineButton}
             onPress={() => router.push('/register')}
@@ -131,6 +173,7 @@ export default function Login() {
     </KeyboardAvoidingView>
   );
 }
+
 
 const styles = StyleSheet.create({
   screen: {
@@ -251,6 +294,14 @@ const styles = StyleSheet.create({
     padding: 6,
   },
 
+  errorMessage: {
+    fontFamily: 'BJCree-Regular',
+    fontSize: 12,
+    color: '#e74c3c',
+    marginTop: 4,
+    marginLeft: 4,
+  },
+
   /* ── Primary Button ── */
   button: {
     flexDirection: 'row',
@@ -313,5 +364,12 @@ const styles = StyleSheet.create({
     color: NAV,
     fontSize: 13,
     letterSpacing: 0.5,
+  },
+   authError: {
+    fontFamily: 'BJCree-Regular',
+    fontSize: 13,
+    color: '#e74c3c',
+    marginBottom: 12,
+    textAlign: 'center',
   },
 });

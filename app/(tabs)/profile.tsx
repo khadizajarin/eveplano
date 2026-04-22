@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Modal,
   ScrollView,
@@ -144,6 +143,23 @@ export default function Profile() {
   const [showDivisionList, setShowDivisionList] = useState(false);
   const [showCityList, setShowCityList] = useState(false);
 
+  const [myBookings, setMyBookings] = useState<BookingType[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+
+  type BookingType = {
+    id: string;
+    serviceId: string;
+    serviceName: string;
+    // bookedBy: string;
+    user: string;
+    createdAt: any;
+    numberOfGuests: number;
+    venue?: string;
+    phoneNumber: string;
+    specialRequirements?: string;
+    progress: 'pending' | 'confirmed' | 'rejected' | 'completed';
+  };
+
   useEffect(() => {
     const fetchUser = async () => {
       if (!user?.email) {
@@ -184,6 +200,49 @@ export default function Profile() {
 
     fetchUser();
   }, [user]);
+
+  useEffect(() => {
+  const fetchMyBookings = async () => {
+    if (!userData || userData.role !== 'user' || !user || !user.email) {
+      setLoadingBookings(false);
+      return;
+    }
+
+    setLoadingBookings(true);
+    try {
+      const q = query(
+        collection(db, 'bookings'),
+        where('user', '==', user.email),
+      );
+      const snap = await getDocs(q);
+
+      const list: BookingType[] = [];
+      snap.forEach((doc) => {
+        const data = doc.data();
+        // console.log('Booking doc data:', data); 
+        list.push({
+          id: doc.id,
+          serviceId: data.serviceId,
+          serviceName: data.serviceName,
+          user: data.user,
+          createdAt: data.createdAt,
+          numberOfGuests: data.numberOfGuests,
+          venue: data.venue,
+          phoneNumber: data.phoneNumber,
+          specialRequirements: data.specialRequirements,
+          progress: data.progress,
+        });
+      });
+
+      setMyBookings(list);
+    } catch (err) {
+      console.log('fetchMyBookings error:', err);
+    }
+    setLoadingBookings(false);
+  };
+
+  fetchMyBookings();
+}, [userData, user]);
 
   const handleLogOut = async () => {
     await signOut(auth);
@@ -555,16 +614,82 @@ export default function Profile() {
         </ScrollView>
       </Modal>
 
+      {/* My Bookings (role: user only) */}
+      {userData?.role === 'user' && (
+        <View style={styles.bookingsContainer}>
+          <View style={styles.bookingsHeader}>
+            <View style={styles.headerAccent} />
+            <View>
+              <Text style={styles.eyebrow}>BOOKINGS</Text>
+              <Text style={styles.headerTitle}>My Bookings</Text>
+            </View>
+          </View>
+          <View style={styles.divider} />
+
+          {loadingBookings ? (
+            <View style={styles.loaderScreen}>
+              <ActivityIndicator size="small" color={NAV} />
+              <Text style={styles.loaderText}>Loading bookings…</Text>
+            </View>
+          ) : myBookings.length === 0 ? (
+            <View style={styles.card}>
+              <Text style={styles.infoValue}>
+                You haven&apos;t booked any service yet.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.bookingsContainer}>
+              {myBookings.map((booking) => (
+                <View key={booking.id} style={styles.bookingItem}>
+                  <Text style={styles.infoLabel}>Service</Text>
+                  <Text style={styles.infoValue}>{booking.serviceName}</Text>
+
+                  <Text style={[styles.infoLabel, { marginTop: 8 }]}>Guests</Text>
+                  <Text style={styles.infoValue}>{booking.numberOfGuests}</Text>
+
+                  <Text style={[styles.infoLabel, { marginTop: 8 }]}>Phone</Text>
+                  <Text style={styles.infoValue}>{booking.phoneNumber}</Text>
+
+                  <Text style={[styles.infoLabel, { marginTop: 8 }]}>
+                    Location / Venue
+                  </Text>
+                  <Text style={styles.infoValue}>{booking.venue || '—'}</Text>
+
+                  <Text style={[styles.infoLabel, { marginTop: 8 }]}>Status</Text>
+                  <Text
+                    style={[
+                      styles.infoValue,
+                      styles.bookingStatus,
+                      booking.progress === 'completed' && styles.completedStatus,
+                      booking.progress === 'confirmed' && styles.confirmedStatus,
+                      booking.progress === 'pending' && styles.pendingStatus,
+                      booking.progress === 'rejected' && styles.rejectedStatus,
+                    ]}
+                  >
+                    {booking.progress.charAt(0).toUpperCase() +
+                      booking.progress.slice(1)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+
 
       {/* ── Header ── */}
-      <View style={styles.AdminHeader}>
-        <View style={styles.headerAccent} />
+       {userData?.role === "admin" && (
         <View>
-          <Text style={styles.eyebrow}>ADMIN</Text>
-          <Text style={styles.headerTitle}>Management</Text>
-        </View>
+          <View style={styles.AdminHeader}>
+            <View style={styles.headerAccent} />
+            <View>
+              <Text style={styles.eyebrow}>ADMIN</Text>
+              <Text style={styles.headerTitle}>Management</Text>
+            </View>
+          </View>
+          <View style={styles.divider} />
       </View>
-      <View style={styles.divider} />
+      )}
 
       {/* Admin-only button */}
       {userData?.role === "admin" && (
@@ -756,7 +881,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: NAV,
     letterSpacing: 0.1,
-    maxWidth: "65%",
+    // maxWidth: "65%",
     textAlign: "right",
   },
 
@@ -916,5 +1041,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: NAV,
   },
-  
-});
+  bookingsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 18,
+    marginTop: 12,
+  },
+  bookingItem: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(4,30,75,0.12)',
+  },
+  bookingStatus: {
+    fontFamily: 'BJCree-Bold',
+    fontSize: 12,
+    letterSpacing: 1,
+  },
+  pendingStatus: {
+    color: '#f39c12',
+  },
+  confirmedStatus: {
+    color: '#00bc8c',
+  },
+  rejectedStatus: {
+    color: '#e74c3c',
+  },
+  completedStatus: {
+    color: '#2c3e50',
+  },
+    
+  });

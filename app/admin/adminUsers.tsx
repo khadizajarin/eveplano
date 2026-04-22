@@ -16,27 +16,14 @@ import {
   getDocs,
   updateDoc,
   doc,
-  query,
-  where,
 } from 'firebase/firestore';
 import { db } from '../hooks/firebase.config';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
 import useAuthentication from '../hooks/useAuthentication';
+
 
 const NAV = '#041e4b';
 const CREAM = '#fffefd';
 
-type UserType = {
-  email: string;
-  displayName?: string;
-  phoneNumber?: string;
-  photoURL?: string;
-  role?: string;
-  country?: any;
-  division?: any;
-  city?: any;
-};
 
 type User = {
   id: string;
@@ -46,50 +33,6 @@ type User = {
   blocked?: boolean;
 };
 
-const exportUsersCsv = async (users: User[]) => {
-  try {
-    // header লাইন
-    const header = 'email,displayName,role,blocked\n';
-
-    // প্রতিটি user এর row
-    const rows = users
-      .map((u) => {
-        const cols = [
-          u.email,
-          u.displayName || '',
-          u.role || '',
-          u.blocked ? 'true' : 'false',
-        ];
-        return (
-          cols
-            .map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`)
-            .join(',')
-        );
-      })
-      .join('\n');
-
-    const csvContent = header + rows;
-
-    const fileUri = FileSystem.cacheDirectory + 'users-report.csv';
-    await FileSystem.writeAsStringAsync(fileUri, csvContent, {
-      encoding: FileSystem.EncodingType.UTF8,
-    });
-
-    const canShare = await Sharing.isAvailableAsync();
-    if (!canShare) {
-      Alert.alert('CSV Export', `CSV saved at: ${fileUri}`);
-      return;
-    }
-
-    await Sharing.shareAsync(fileUri, {
-      mimeType: 'text/csv',
-      dialogTitle: 'Share users CSV',
-    });
-  } catch (err) {
-    console.log(err);
-    Alert.alert('CSV Export', 'Failed to export CSV.');
-  }
-};
 
 export default function AdminUsers() {
   const { user, auth } = useAuthentication();
@@ -194,21 +137,7 @@ export default function AdminUsers() {
       <View style={styles.divider} />
 
       {/* CSV Export */}
-      {user && user.email && (
-        <View style={styles.adminCSVSection}>
-          <Text style={styles.adminCSVLabel}>Admin: CSV Export</Text>
-          <Text style={styles.adminCSVText}>
-            Download or share the user data CSV file for reporting.
-          </Text>
-          <TouchableOpacity
-            style={styles.adminCSVButton}
-            onPress={() => exportUsersCsv(users)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.adminCSVButtonText}>Download Users CSV</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      
 
       <FlatList
         data={users}

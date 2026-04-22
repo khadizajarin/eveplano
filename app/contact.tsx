@@ -1,7 +1,7 @@
 import { StyleSheet, View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ThemedView } from '@/components/themed-view';
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign,Ionicons  } from '@expo/vector-icons';
 
 const NAV   = '#041e4b';
 const CREAM = '#fffefd';
@@ -77,32 +77,32 @@ export default function Contact() {
           <Text style={styles.stayText}>Stay connected with us</Text>
 
           <View style={styles.footerRow}>
-            <AntDesign name="mail" size={16} color="rgba(4,30,75,0.60)" />
+            <Ionicons name="mail" size={16} color="rgba(4,30,75,0.60)" />
             <Text style={styles.footerItem}>eveplano@example.com</Text>
           </View>
 
           <View style={styles.footerRow}>
-            <AntDesign name="phone" size={16} color="rgba(4,30,75,0.60)" />
+            <Ionicons name="call" size={16} color="rgba(4,30,75,0.60)" />
             <Text style={styles.footerItem}>+880 1712 345678</Text>
           </View>
 
           <View style={styles.footerRow}>
-            <AntDesign name="global" size={16} color="rgba(4,30,75,0.60)" />
+            <Ionicons name="earth" size={16} color="rgba(4,30,75,0.60)" />
             <Text style={styles.footerItem}>www.eveplano.com</Text>
           </View>
 
           <View style={styles.footerRow}>
-            <AntDesign name="facebook" size={16} color="rgba(61,89,152,1)" />
+            <Ionicons name="logo-facebook" size={16} color="rgba(61,89,152,1)" />
             <Text style={styles.footerItem}>facebook.com/eveplano</Text>
           </View>
 
           <View style={styles.footerRow}>
-            <AntDesign name="instagram" size={16} color="rgba(212,75,126,1)" />
+            <Ionicons name="logo-instagram" size={16} color="rgba(212,75,126,1)" />
             <Text style={styles.footerItem}>instagram.com/eveplano</Text>
           </View>
 
           <View style={styles.footerRow}>
-            <AntDesign name="pinterest" size={16} color="#bd081c" />
+            <Ionicons name="logo-pinterest" size={16} color="#bd081c" />
             <Text style={styles.footerItem}>pinterest.com/eveplano</Text>
           </View>
         </View>
