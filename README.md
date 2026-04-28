@@ -179,7 +179,7 @@ npx expo start --web
 ## 📲 Live Demo / APK (Placeholder)
 
 🔗 **APK file / Demo link**:  
-👉 [https://drive.google.com/file/d/18WyjgGPqT1HvU4XONWgOq0IGxZSkCt8v/view?usp=drive_link](hhttps://drive.google.com/file/d/18WyjgGPqT1HvU4XONWgOq0IGxZSkCt8v/view?usp=drive_link)
+👉 [https://drive.google.com/file/d/18WyjgGPqT1HvU4XONWgOq0IGxZSkCt8v/view?usp=drive_link](https://drive.google.com/file/d/18WyjgGPqT1HvU4XONWgOq0IGxZSkCt8v/view?usp=drive_link)
 
 
 ---
