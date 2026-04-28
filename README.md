@@ -140,7 +140,7 @@ A full event booking and service management mobile app built with **React Native
 ## 📱 App Interface Mockup
 
 <p align="center">
-  <img src="./assets/images/Mobile App Screen Mockup, Mosaic.pn" width="18%" />
+  <img src="./assets/images/Mobile App Screen Mockup, Mosaic.png" width="full" />
   <!-- <img src="./assets/home.jpg" width="18%" />
   <img src="./assets/details.jpg" width="18%" />
   <img src="./assets/booking.jpg" width="18%" />
