@@ -137,6 +137,20 @@ A full event booking and service management mobile app built with **React Native
 
 ---
 
+## 📱 App Interface Mockup
+
+<p align="center">
+  <img src="./assets/images/Mobile App Screen Mockup, Mosaic.jpeg" width="18%" />
+  <!-- <img src="./assets/home.jpg" width="18%" />
+  <img src="./assets/details.jpg" width="18%" />
+  <img src="./assets/booking.jpg" width="18%" />
+  <img src="./assets/admin.jpg" width="18%" /> -->
+</p>
+
+<p align="center">
+  <i>EvePlano: From Discovery to Booking – A Seamless Experience</i>
+</p>
+
 ## 📦 Usage (How to Run)
 
 1. Clone this repo:
